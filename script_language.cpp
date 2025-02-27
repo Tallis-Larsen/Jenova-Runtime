@@ -150,10 +150,6 @@ Object* CPPScriptLanguage::_create_script() const
 	CPPScript* script = memnew(CPPScript);
 	return script;
 }
-bool CPPScriptLanguage::_has_named_classes() const
-{
-	return false; // Not Supprted Yet
-}
 bool CPPScriptLanguage::_supports_builtin_mode() const
 {
 	return true; // Experimental
@@ -420,10 +416,6 @@ Object* CPPHeaderLanguage::_create_script() const
 	CPPHeader* script = memnew(CPPHeader);
 	return script;
 }
-bool CPPHeaderLanguage::_has_named_classes() const
-{
-	return false;
-}
 bool CPPHeaderLanguage::_supports_builtin_mode() const
 {
 	return false;
@@ -556,3 +548,15 @@ Dictionary CPPHeaderLanguage::_get_global_class_name(const String& p_path) const
 {
 	return Dictionary();
 }
+
+// Deprecated
+#ifndef LITHIUM_EDITION
+bool CPPScriptLanguage::_has_named_classes() const
+{
+	return false; // Not Supprted Yet
+}
+bool CPPHeaderLanguage::_has_named_classes() const
+{
+	return false;
+}
+#endif

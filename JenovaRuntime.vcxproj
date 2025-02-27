@@ -44,11 +44,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;JENOVA_RUNTIME;JENOVA_SDK_BUILD;TYPED_METHOD_BIND;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;JENOVA_RUNTIME;JENOVA_SDK_BUILD;TYPED_METHOD_BIND;LITHIUM_EDITION_DISABLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.\Libs;.\Libs\GodotSDK;.\Libs\Archive;.\Libs\Curl;.\Libs\Threading</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Libs;.\Libs\GodotSDK\;.\Libs\GodotSDK\godot_cpp;.\Libs\LithiumSDK;.\Libs\LithiumSDK\lithium_cpp;.\Libs\Archive;.\Libs\Curl;.\Libs\Threading</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OpenMPSupport>true</OpenMPSupport>

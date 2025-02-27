@@ -32,6 +32,9 @@ flags = [
 directories = [
     "Libs",
     "Libs/GodotSDK",
+    "Libs/GodotSDK/godot_cpp",
+    "Libs/LithiumSDK",
+    "Libs/LithiumSDK/lithium_cpp",   
     "Libs/Archive",
     "Libs/Curl"
 ]
@@ -59,6 +62,7 @@ skip_deps           = False
 skip_cache          = False
 skip_packaging      = False
 deploy_mode         = False
+lithium_edition     = False
 
 # Global Functions
 def rgb_print(hex_color, output, inplace = False):
@@ -120,7 +124,7 @@ def print_banner():
 ===========================================================================
     """
     rgb_print("#42f569", banner)
-    rgb_print("#2942ff", f".:: Jenova Build System v2.2 ::.\n")
+    rgb_print("#2942ff", f".:: Jenova Build System v2.3 ::.\n")
 def get_compiler_choice():
     global compiler, linker
     rgb_print("#ff2474", "[ ? ] Select Supported Compiler :\n")
@@ -365,6 +369,7 @@ def build_dependencies_linux(buildMode, cacheDir):
             "-DCMAKE_BUILD_TYPE=MinSizeRel",
             "-DBUILD_SHARED_LIBS=OFF",
             "-DENABLE_LZMA=ON",
+            "-DENABLE_BZip2=OFF",
             "-DENABLE_TEST=OFF"
         ], check=True)
         build_with_ninja(buildPath)
@@ -1332,7 +1337,7 @@ if __name__ == "__main__":
     os.environ['PYTHONDONTWRITEBYTECODE'] = "1"
 
     # Create Arguments Parser
-    parser = argparse.ArgumentParser(description="Jenova Runtime Build System 2.2 Developed by Hamid.Memar")
+    parser = argparse.ArgumentParser(description="Jenova Runtime Build System 2.3 Developed by Hamid.Memar")
     parser.add_argument('--compiler', type=str, help='Specify Compiler to Use.')
     parser.add_argument('--deploy-mode', action='store_true', help='Run As GitHub Action Deploy Mode')  
     parser.add_argument('--skip-banner', action='store_true', help='Skip Printing Banner')
@@ -1341,6 +1346,7 @@ if __name__ == "__main__":
     parser.add_argument('--skip-packaging', action='store_true', help='Skip Creating Distribution Package')
     parser.add_argument('--clean-up', action='store_true', help='Clean Up Build Files')
     parser.add_argument('--deep-clean-up', action='store_true', help='Clean Up Everything')
+    parser.add_argument('--lithium-edition', action='store_true', help='Build Jenova Runtime foR Lithium IDE')
 
     # Parser Arguments
     args = parser.parse_args()
@@ -1369,6 +1375,11 @@ if __name__ == "__main__":
     if args.deep_clean_up:
         rgb_print("#367fff", "[ ^ ] Cleaning Up Everything...")
         clean_up_build(True)
+
+    # Handle Lithium Edition
+    if args.lithium_edition:
+        lithium_edition = True
+        flags.append("LITHIUM_EDITION")
 
     # Set Compiler And Start Build
     start_time = time.time()

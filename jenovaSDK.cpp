@@ -23,27 +23,35 @@
 
 // Godot SDK
 #include <gdextension_interface.h>
-#include <godot_cpp/godot.hpp>
-#include <godot_cpp/core/defs.hpp>
-#include <godot_cpp/core/class_db.hpp>
-#include <godot_cpp/core/object.hpp>
-#include <godot_cpp/classes/os.hpp>
-#include <godot_cpp/classes/time.hpp>
-#include <godot_cpp/classes/engine.hpp>
-#include <godot_cpp/classes/editor_interface.hpp>
-#include <godot_cpp/classes/editor_selection.hpp>
-#include <godot_cpp/classes/theme.hpp>
-#include <godot_cpp/classes/window.hpp>
-#include <godot_cpp/classes/scene_tree.hpp>
-#include <godot_cpp/classes/packed_scene.hpp>
-#include <godot_cpp/classes/resource_saver.hpp>
-#include <godot_cpp/classes/resource_loader.hpp>
-#include <godot_cpp/classes/texture2d.hpp>
-#include <godot_cpp/templates/vector.hpp>
-#include <godot_cpp/variant/string.hpp>
-#include <godot_cpp/variant/node_path.hpp>
-#include <godot_cpp/variant/array.hpp>
-#include <godot_cpp/variant/utility_functions.hpp>
+#include <godot.hpp>
+#include <core/defs.hpp>
+#include <core/class_db.hpp>
+#include <core/object.hpp>
+#include <classes/os.hpp>
+#include <classes/time.hpp>
+#include <classes/engine.hpp>
+#include <classes/editor_interface.hpp>
+#include <classes/editor_selection.hpp>
+#include <classes/theme.hpp>
+#include <classes/window.hpp>
+#include <classes/scene_tree.hpp>
+#include <classes/resource_saver.hpp>
+#include <classes/resource_loader.hpp>
+#include <classes/texture2d.hpp>
+#include <templates/vector.hpp>
+#include <variant/string.hpp>
+#include <variant/node_path.hpp>
+#include <variant/array.hpp>
+#include <variant/utility_functions.hpp>
+
+// GodotSDK/LithiumSDK
+#ifdef LITHIUM_EDITION
+#include <classes/component.hpp>
+#include <classes/element.hpp>
+#include <Misc/lithium-compatibility.hpp>
+#else
+#include <classes/packed_scene.hpp>
+#endif
 
 // Jenova System SDK
 #include "JenovaSDK.h"
