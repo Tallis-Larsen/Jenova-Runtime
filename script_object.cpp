@@ -24,7 +24,6 @@ static std::chrono::steady_clock::time_point lastScriptReloadTime = std::chrono:
 // CPPScript Object Implementation
 void CPPScript::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("GenerateScriptIdentity"), &CPPScript::GenerateScriptIdentity);
 }
 bool CPPScript::_editor_can_reload_from_file()
 {
@@ -45,8 +44,7 @@ Ref<Script> CPPScript::_get_base_script() const
 }
 StringName CPPScript::_get_global_name()
 {
-	if (!this->HasValidScriptIdentity()) this->GenerateScriptIdentity();
-	globalName = StringName("JenovaScript_" + scriptObjectIdentity);
+	globalName = StringName("JenovaScript_" + GetScriptIdentity());
 	return globalName;
 }
 bool CPPScript::_inherits_script(const Ref<Script>& p_script) const
@@ -117,12 +115,19 @@ TypedArray<Dictionary> CPPScript::_get_documentation() const
 }
 String CPPScript::_get_class_icon_path() const
 {
-	return String();  // Not Supported Yet
+	String iconPath = get_path().replace(get_path().get_extension(), "svg");
+	if (FileAccess::file_exists(iconPath)) return iconPath;
+	return String(); // No Icon Provided
 }
 bool CPPScript::_has_method(const StringName& p_method) const
 {
-	jenova::VerboseByID(__LINE__, "CPPScript::_has_method (%s)", AS_C_STRING(p_method));
-	return false; // Not Supported Yet
+	std::string scriptUID = AS_STD_STRING(GetScriptIdentity());
+	jenova::FunctionList jenovaMethods = JenovaInterpreter::GetFunctionsList(scriptUID);
+	for (const auto& method : jenovaMethods)
+	{
+		if (p_method == StringName(method.c_str())) return true;
+	}
+	return false;
 }
 bool CPPScript::_has_static_method(const StringName& p_method) const
 {
@@ -131,8 +136,14 @@ bool CPPScript::_has_static_method(const StringName& p_method) const
 }
 Dictionary CPPScript::_get_method_info(const StringName& p_method) const
 {
-	jenova::VerboseByID(__LINE__, "CPPScript::_get_method_info (%s)", AS_C_STRING(p_method));
-	return Dictionary(); // Not Supported Yet
+	TypedArray<Dictionary> methodsList;
+	std::string scriptUID = AS_STD_STRING(GetScriptIdentity());
+	auto functionContainer = JenovaInterpreter::GetFunctionContainer(scriptUID);
+	for (const auto& function : functionContainer.scriptFunctions)
+	{
+		if (function.functionName == p_method) return function.methodInfo;
+	}
+	return Dictionary();
 }
 bool CPPScript::_is_tool() const
 {
@@ -178,14 +189,19 @@ void CPPScript::_update_exports()
 }
 TypedArray<Dictionary> CPPScript::_get_script_method_list() const
 {
-	jenova::VerboseByID(__LINE__, "CPPScript::_get_script_method_list");
-	return TypedArray<Dictionary>();  // Not Supported Yet
+	TypedArray<Dictionary> methodsList;
+	std::string scriptUID = AS_STD_STRING(GetScriptIdentity());
+	auto functionContainer = JenovaInterpreter::GetFunctionContainer(scriptUID);
+	for (const auto& function : functionContainer.scriptFunctions) methodsList.push_back(Dictionary(function.methodInfo));
+	return methodsList;
 }
 TypedArray<Dictionary> CPPScript::_get_script_property_list() const
 {
-	jenova::VerboseByID(__LINE__, "CPPScript::_get_script_property_list");
-	TypedArray<Dictionary> properties;
-	return properties;  // Not Supported Yet
+	TypedArray<Dictionary> propertyList;
+	std::string scriptUID = AS_STD_STRING(GetScriptIdentity());
+	auto propertyContainer = JenovaInterpreter::GetPropertyContainer(scriptUID);
+	for (const auto& property : propertyContainer.scriptProperties) propertyList.push_back(Dictionary(property.propertyInfo));
+	return propertyList;
 }
 int32_t CPPScript::_get_member_line(const StringName& p_member) const
 {
@@ -218,24 +234,9 @@ void CPPScript::SetDefaultSourceCode()
 	// Set Default Source Code
 	source_code = CODE_TEMPLATE(CODE_TEMPLATE_DEFAULT);
 }
-jenova::ScriptIdentifier CPPScript::GenerateScriptIdentity()
+jenova::ScriptIdentifier CPPScript::GetScriptIdentity() const
 {
-	scriptObjectIdentity = jenova::GenerateStandardUIDFromPath(this);
-	return scriptObjectIdentity;
-}
-jenova::ScriptIdentifier CPPScript::GetScriptIdentity()
-{
-	return scriptObjectIdentity;
-}
-bool CPPScript::HasValidScriptIdentity() const
-{
-	if (scriptObjectIdentity.is_empty()) return false;
-	return true;
-}
-bool CPPScript::SetScriptIdentity(jenova::ScriptIdentifier newIdentity)
-{
-	scriptObjectIdentity = newIdentity;
-	return true;
+	return jenova::GenerateStandardUIDFromPath(this);
 }
 void CPPScript::ReloadScriptSourceCode()
 {

@@ -241,17 +241,20 @@ GDExtensionScriptInstanceInfo3 ScriptInstanceExtension::script_instance_info =
 // Script Instance Class Category
 bool ScriptInstanceExtension::get_class_category(GDExtensionPropertyInfo& r_class_category) const
 {
-	Ref<Script> script = get_script();
+	Ref<CPPScript> script = get_script();
 	if (script.is_valid())
 	{
-		std::shared_ptr<StringName> name = std::make_shared<StringName>(script->get_name());
-		std::shared_ptr<StringName> className = std::make_shared<StringName>(script->get_class());
-		std::shared_ptr<String> path = std::make_shared<String>(script->get_path());
+		// Update Script Class Information
+		script->scriptClassName = CPPScriptLanguage::get_singleton()->_get_global_class_name(script->get_path())["name"];
+		script->scriptClassType = script->get_class();
+		script->scriptClassPath = script->get_path();
+
+		// Create Class Category
 		r_class_category.type = GDEXTENSION_VARIANT_TYPE_NIL;
-		r_class_category.name = name->_native_ptr();
-		r_class_category.class_name = className->_native_ptr();
+		r_class_category.name = &script->scriptClassName;
+		r_class_category.class_name = &script->scriptClassType;
 		r_class_category.hint = PROPERTY_HINT_NONE;
-		r_class_category.hint_string = path->_native_ptr();
+		r_class_category.hint_string = &script->scriptClassPath;
 		r_class_category.usage = PROPERTY_USAGE_CATEGORY;
 		return true;
 	}

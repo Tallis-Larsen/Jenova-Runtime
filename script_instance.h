@@ -23,7 +23,7 @@ protected:
 	Object* owner;
 	Ref<CPPScript> script;
 	mutable Dictionary instanceProperties;
-	mutable List<MethodInfo> methods_info;
+	mutable List<MethodInfo> methodsInfo;
 	size_t refCount = 0;
 	String scriptInstanceIdentity = "";
 	bool isDeleting = false;

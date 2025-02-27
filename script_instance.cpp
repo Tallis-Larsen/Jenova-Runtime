@@ -44,26 +44,41 @@ static void AddState(GDExtensionConstStringNamePtr p_name, GDExtensionConstVaria
 	List<Pair<StringName, Variant>>* list = reinterpret_cast<List<Pair<StringName, Variant>>*>(p_userdata);
 	list->push_back({ *(const StringName*)p_name, *(const Variant*)p_value });
 }
-static GDExtensionMethodInfo CreateMethodInfo(const MethodInfo& method_info)
+static GDExtensionMethodInfo CreateMethodInfo(const MethodInfo& methodInfo)
 {
+	// Create Extension Parameters Info
+	std::vector<GDExtensionPropertyInfo> parametersInfo;
+	for (const auto& parameter : methodInfo.arguments)
+	{
+		parametersInfo.push_back(GDExtensionPropertyInfo
+		{
+			GDExtensionVariantType(parameter.type),
+			AllocateStringName(parameter.name),
+			AllocateStringName(parameter.class_name),
+			parameter.hint,
+			AllocateStringName(parameter.hint_string),
+			parameter.usage
+		});
+	}
+
+	// Create Extension Method Info
 	return GDExtensionMethodInfo
 	{
-		AllocateStringName(method_info.name),
+		AllocateStringName(methodInfo.name),
 		GDExtensionPropertyInfo
 		{
-			GDEXTENSION_VARIANT_TYPE_OBJECT,
-			AllocateStringName(method_info.return_val.name),
-			AllocateStringName(method_info.return_val.class_name),
-			method_info.return_val.hint,
-			AllocateStringName(method_info.return_val.hint_string),
-			method_info.return_val.usage
+			GDExtensionVariantType(methodInfo.return_val.type),
+			AllocateStringName(methodInfo.return_val.name),
+			AllocateStringName(methodInfo.return_val.class_name),
+			methodInfo.return_val.hint,
+			AllocateStringName(methodInfo.return_val.hint_string),
+			methodInfo.return_val.usage
 		},
-		method_info.flags,
-		method_info.id,
-		(uint32_t)method_info.arguments.size(),
-		nullptr,
-		0,
-		nullptr
+		methodInfo.flags,
+		methodInfo.id,
+		(uint32_t)methodInfo.arguments.size(),
+		parametersInfo.data(),
+		0, nullptr // Default Arguments Not Supported Yet
 	};
 }
 template<typename T> T* memnew_with_size(int p_size)
@@ -291,13 +306,12 @@ void CPPScriptInstance::update_methods() const
 	// Validate Script
 	if (script.is_null()) return;
 
-	// Update Methods
-	methods_info.clear();
-	jenova::FunctionList jenovaMethods = JenovaInterpreter::GetFunctionsList(AS_STD_STRING(scriptInstanceIdentity));
-	for (auto& function : jenovaMethods)
+	// Update Script Methods
+	methodsInfo.clear();
+	auto functionContainer = JenovaInterpreter::GetFunctionContainer(AS_STD_STRING(scriptInstanceIdentity));
+	for (auto& scriptFunction : functionContainer.scriptFunctions)
 	{
-		MethodInfo method_info = MethodInfo(Variant::NIL, StringName(function.c_str()));
-		this->methods_info.push_back(method_info);
+		this->methodsInfo.push_back(scriptFunction.methodInfo);
 	}
 }
 const GDExtensionMethodInfo* CPPScriptInstance::get_method_list(uint32_t *r_count) const 
@@ -316,11 +330,11 @@ const GDExtensionMethodInfo* CPPScriptInstance::get_method_list(uint32_t *r_coun
 	this->update_methods();
 
 	// Create Method List
-	const int size = methods_info.size();
-	GDExtensionMethodInfo *list = memnew_arr(GDExtensionMethodInfo, size);
+	const int size = methodsInfo.size();
+	GDExtensionMethodInfo* list = memnew_arr(GDExtensionMethodInfo, size);
 	int i = 0;
-	for (auto &method_info : methods_info) {
-		list[i] = CreateMethodInfo(method_info);
+	for (auto& methodInfo : methodsInfo) {
+		list[i] = CreateMethodInfo(methodInfo);
 		i++;
 	}
 
@@ -336,14 +350,12 @@ void CPPScriptInstance::free_method_list(const GDExtensionMethodInfo* p_list, ui
 	// Remove
 	jenova::VerboseByID(__LINE__, "CPPScriptInstance::free_method_list");
 
-	if (p_list) {
-		memdelete_arr(p_list);
-	}
+	if (p_list) memdelete_arr(p_list);
 }
 const GDExtensionPropertyInfo* CPPScriptInstance::get_property_list(uint32_t *r_count) const
 {
 	// Create Property List
-	LocalVector<GDExtensionPropertyInfo> infos;
+	LocalVector<GDExtensionPropertyInfo> propertiesInfo;
 
 	// Add Properties
 	if (script.is_valid() && script->is_built_in())
@@ -355,7 +367,7 @@ const GDExtensionPropertyInfo* CPPScriptInstance::get_property_list(uint32_t *r_
 		sourceCodeProperty.hint_string = AllocateString("");
 		sourceCodeProperty.hint = PROPERTY_HINT_NONE;
 		sourceCodeProperty.usage = PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL;
-		infos.push_back(sourceCodeProperty);
+		propertiesInfo.push_back(sourceCodeProperty);
 	}
 	
 	// Add Jenova Script Interpreted Properties
@@ -369,18 +381,18 @@ const GDExtensionPropertyInfo* CPPScriptInstance::get_property_list(uint32_t *r_
 		sourceCodeProperty.hint_string = AllocateString(propContainer.scriptProperties[i].propertyInfo.hint_string);
 		sourceCodeProperty.hint = propContainer.scriptProperties[i].propertyInfo.hint;
 		sourceCodeProperty.usage = propContainer.scriptProperties[i].propertyInfo.usage;
-		infos.push_back(sourceCodeProperty);
+		propertiesInfo.push_back(sourceCodeProperty);
 	}
 
 	// Add Jenova Script User-Defined Properties
 
 	// Set Properties Size
-	*r_count = infos.size();
-	if (infos.size() == 0) return nullptr;
+	*r_count = propertiesInfo.size();
+	if (propertiesInfo.size() == 0) return nullptr;
 
 	// Create Property Final List
-	GDExtensionPropertyInfo* list = memnew_with_size<GDExtensionPropertyInfo>(infos.size());
-	memcpy(list, infos.ptr(), sizeof(GDExtensionPropertyInfo) * infos.size());
+	GDExtensionPropertyInfo* list = memnew_with_size<GDExtensionPropertyInfo>(propertiesInfo.size());
+	memcpy(list, propertiesInfo.ptr(), sizeof(GDExtensionPropertyInfo) * propertiesInfo.size());
 	return list;
 }
 void CPPScriptInstance::free_property_list(const GDExtensionPropertyInfo *p_list, uint32_t p_count) const 

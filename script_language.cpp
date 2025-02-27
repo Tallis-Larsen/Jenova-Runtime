@@ -205,42 +205,52 @@ void CPPScriptLanguage::_thread_enter() {}
 void CPPScriptLanguage::_thread_exit() {}
 String CPPScriptLanguage::_debug_get_error() const
 {
+	jenova::Output("_debug_get_error");
 	return String();
 }
 int32_t CPPScriptLanguage::_debug_get_stack_level_count() const
 {
+	jenova::Output("_debug_get_stack_level_count");
 	return 0;
 }
 int32_t CPPScriptLanguage::_debug_get_stack_level_line(int32_t p_level) const
 {
+	jenova::Output("_debug_get_stack_level_line %d", p_level);
 	return 0;
 }
 String CPPScriptLanguage::_debug_get_stack_level_function(int32_t p_level) const
 {
+	jenova::Output("_debug_get_stack_level_function %d", p_level);
 	return String();
 }
 Dictionary CPPScriptLanguage::_debug_get_stack_level_locals(int32_t p_level, int32_t p_max_subitems, int32_t p_max_depth)
 {
+	jenova::Output("_debug_get_stack_level_locals %d %d %d", p_level, p_max_subitems, p_max_depth);
 	return Dictionary();
 }
 Dictionary CPPScriptLanguage::_debug_get_stack_level_members(int32_t p_level, int32_t p_max_subitems, int32_t p_max_depth)
 {
+	jenova::Output("_debug_get_stack_level_members %d %d %d", p_level, p_max_subitems, p_max_depth);
 	return Dictionary();
 }
 void* CPPScriptLanguage::_debug_get_stack_level_instance(int32_t p_level)
 {
+	jenova::Output("_debug_get_stack_level_instance %d", p_level);
 	return nullptr;
 }
 Dictionary CPPScriptLanguage::_debug_get_globals(int32_t p_max_subitems, int32_t p_max_depth)
 {
+	jenova::Output("_debug_get_globals %d", p_max_subitems, p_max_depth);
 	return Dictionary();
 }
 String CPPScriptLanguage::_debug_parse_stack_level_expression(int32_t p_level, const String& p_expression, int32_t p_max_subitems, int32_t p_max_depth)
 {
+	jenova::Output("_debug_parse_stack_level_expression %d %s %d %d", p_level, p_max_depth, AS_C_STRING(p_expression), p_max_subitems, p_max_depth);
 	return String();
 }
 TypedArray<Dictionary> CPPScriptLanguage::_debug_get_current_stack_info()
 {
+	jenova::Output("_debug_get_current_stack_info");
 	return TypedArray<Dictionary>();
 }
 void CPPScriptLanguage::_reload_all_scripts()
@@ -325,7 +335,7 @@ Dictionary CPPScriptLanguage::_get_global_class_name(const String& p_path) const
 		// Create Class Info
 		if (classInfo["name"] == String("NotFound")) classInfo["name"] = " Jenova C++ Script";
 		classInfo["base_type"] = jenova::GlobalSettings::JenovaScriptType;
-		String iconPath = p_path.replace(p_path.get_extension(), ".svg");
+		String iconPath = p_path.replace(p_path.get_extension(), "svg");
 		if (FileAccess::file_exists(iconPath)) classInfo["icon_path"] = iconPath;
 
 		// Create Global Class If Not Exists

@@ -131,7 +131,7 @@ bool JenovaInterpreter::LoadModule(const uint8_t* moduleDataPtr, const size_t mo
     if (!moduleBaseAddress) return false;
 
     // Update Property Storage From Metadata
-    if (!JenovaInterpreter::UpdatePropertyStorageFromMetaData(metaData))
+    if (!JenovaInterpreter::UpdatePropertyStorageFromMetaData())
     {
         jenova::Error("Jenova Interpreter", "Failed to Update Interpreter Property Database from Metadata.");
         return false;
@@ -222,7 +222,7 @@ intptr_t JenovaInterpreter::GetModuleBaseAddress()
 {
 	return moduleBaseAddress;
 }
-jenova::FunctionList JenovaInterpreter::GetFunctionsList(std::string& scriptUID)
+jenova::FunctionList JenovaInterpreter::GetFunctionsList(const std::string& scriptUID)
 {
     try
     {
@@ -243,7 +243,7 @@ jenova::FunctionList JenovaInterpreter::GetFunctionsList(std::string& scriptUID)
         return jenova::FunctionList();
     }
 }
-jenova::FunctionAddress JenovaInterpreter::GetFunctionAddress(const std::string& functionName, std::string& scriptUID)
+jenova::FunctionAddress JenovaInterpreter::GetFunctionAddress(const std::string& functionName, const std::string& scriptUID)
 {
     try
     {
@@ -273,7 +273,7 @@ jenova::FunctionAddress JenovaInterpreter::GetFunctionAddress(const std::string&
     // Function Was Not Found
     return 0;
 }
-jenova::ParameterTypeList JenovaInterpreter::GetFunctionParameters(const std::string& functionName, std::string& scriptUID)
+jenova::ParameterTypeList JenovaInterpreter::GetFunctionParameters(const std::string& functionName, const std::string& scriptUID)
 {
     try
     {
@@ -304,7 +304,7 @@ jenova::ParameterTypeList JenovaInterpreter::GetFunctionParameters(const std::st
     // Not Found
     return jenova::ParameterTypeList();
 }
-std::string JenovaInterpreter::GetFunctionReturn(const std::string& functionName, std::string& scriptUID)
+std::string JenovaInterpreter::GetFunctionReturn(const std::string& functionName, const std::string& scriptUID)
 {
     try
     {
@@ -342,7 +342,55 @@ bool JenovaInterpreter::IsFunctionReturnable(const std::string& returnType)
     if (returnType == "void") return false;
     return true;
 }
-jenova::ScriptPropertyContainer JenovaInterpreter::GetPropertyContainer(std::string& scriptUID)
+jenova::ScriptFunctionContainer JenovaInterpreter::GetFunctionContainer(const std::string& scriptUID)
+{
+    // Todo : For Faster Execution Implement Same as GetPropertyContainer
+
+    // Create Function Container
+    jenova::ScriptFunctionContainer functionContainer;
+    functionContainer.scriptUID = String(scriptUID.c_str());
+
+    // Collect Script Functions
+    jenova::FunctionList jenovaMethods = GetFunctionsList(scriptUID);
+    for (size_t fid = 0; fid < jenovaMethods.size(); fid++)
+    {
+        // Create Script Function
+        jenova::ScriptFunction scriptFunction;
+        scriptFunction.functionID = fid;
+        scriptFunction.functionName = String(jenovaMethods[fid].c_str());
+        scriptFunction.ownerScriptUID = functionContainer.scriptUID;
+
+        // Create Method Information
+        scriptFunction.methodInfo.name = StringName(scriptFunction.functionName);
+        scriptFunction.methodInfo.flags = METHOD_FLAGS_DEFAULT;
+        scriptFunction.methodInfo.id = scriptFunction.functionID;
+
+        // Get Function Return Type
+        Variant::Type returnType = jenova::GetVariantTypeFromStdString(GetFunctionReturn(jenovaMethods[fid], scriptUID));
+        scriptFunction.methodInfo.return_val = PropertyInfo(returnType, "return");
+
+        // Get Function Parameter Types
+        jenova::ParameterTypeList paramTypes = GetFunctionParameters(jenovaMethods[fid], scriptUID);
+        for (size_t pid = 0; pid < paramTypes.size(); pid++)
+        {
+            Variant::Type paramType = jenova::GetVariantTypeFromStdString(paramTypes[pid]);
+            if (paramType != Variant::NIL) scriptFunction.methodInfo.arguments.push_back(PropertyInfo(paramType, "Param"));
+        }
+
+        // Name Added Arguments
+        for (size_t argid = 0; argid < scriptFunction.methodInfo.arguments.size(); argid++)
+        {
+            scriptFunction.methodInfo.arguments[argid].name = String(jenova::Format("Param%d", argid + 1).c_str());
+        }
+
+        // Add New Function to Container
+        functionContainer.scriptFunctions.push_back(scriptFunction);
+    }
+
+    // Return Function Container
+    return functionContainer;
+}
+jenova::ScriptPropertyContainer JenovaInterpreter::GetPropertyContainer(const std::string& scriptUID)
 {
     try
     {
@@ -1507,7 +1555,7 @@ bool JenovaInterpreter::UpdateConfigurationsFromMetaData(const jenova::Serialize
         return false;
     }
 }
-bool JenovaInterpreter::UpdatePropertyStorageFromMetaData(const jenova::SerializedData& metaData)
+bool JenovaInterpreter::UpdatePropertyStorageFromMetaData()
 {
     // Clean Storage
     propertyStorage.clear();
@@ -1573,6 +1621,51 @@ bool JenovaInterpreter::FlushPropertyStorage()
     propertyStorage.clear();
     return true;
 }
+jenova::PropertyList JenovaInterpreter::GetPropertiesList(std::string& scriptUID)
+{
+    try
+    {
+        // Create Property List
+        jenova::PropertyList propertyNames;
+
+        // Get Script Metadata by UID
+        nlohmann::json scriptMetadata = moduleMetaData["Scripts"][scriptUID]["properties"];
+
+        // Add Property to List
+        for (const auto& propertyName : scriptMetadata.items()) propertyNames.push_back(propertyName.key());
+
+        // Return List
+        return propertyNames;
+    }
+    catch (const std::exception&)
+    {
+        return jenova::PropertyList();
+    }
+}
+std::string JenovaInterpreter::GetPropertyType(const std::string& propertyName, std::string& scriptUID)
+{
+    try
+    {
+        // Validate Script UID
+        if (!moduleMetaData["Scripts"].contains(scriptUID)) return std::string();
+
+        // Get Script Metadata by UID
+        nlohmann::json scriptMetadata = moduleMetaData["Scripts"][scriptUID]["properties"];
+
+        // Find and Return Property Type
+        for (const auto& prop : scriptMetadata.items())
+        {
+            if (prop.key() == propertyName) return prop.value()["Type"].get<std::string>();
+        }
+    }
+    catch (const std::exception&)
+    {
+        return std::string();
+    }
+
+    // Property was not found
+    return std::string();
+}
 jenova::PropertyAddress JenovaInterpreter::GetPropertyAddress(const std::string& propertyName, std::string& scriptUID)
 {
     try
@@ -1596,7 +1689,6 @@ jenova::PropertyAddress JenovaInterpreter::GetPropertyAddress(const std::string&
     }
     catch (const std::exception&)
     {
-        // Handle errors if any
         return 0;
     }
 

@@ -20,11 +20,11 @@
 #define APP_COMPANYNAME					"MemarDesign™ LLC."
 #define APP_DESCRIPTION					"Real-Time C++ Scripting System for Godot Game Engine, Developed By Hamid.Memar."
 #define APP_COPYRIGHT					"Copyright MemarDesign™ LLC. (©) 2024-2025, All Rights Reserved."
-#define APP_VERSION						"0.3.6.5"
+#define APP_VERSION						"0.3.6.6"
 #define APP_VERSION_MIDDLEFIX			" "
-#define APP_VERSION_POSTFIX				"Alpha"
+#define APP_VERSION_POSTFIX				"Beta"
 #define APP_VERSION_SINGLECHAR			"a"
-#define APP_VERSION_DATA				0, 3, 6, 5
+#define APP_VERSION_DATA				0, 3, 6, 6
 #define APP_VERSION_BUILD				"0"
 #define APP_VERSION_NAME				"Dragon"
 
@@ -298,6 +298,7 @@ namespace jenova
 	typedef std::vector<std::string> ArgumentsArray;
 	typedef std::vector<std::string> FunctionList;
 	typedef std::vector<std::string> ParameterTypeList;
+	typedef std::vector<std::string> PropertyList;
 	typedef std::vector<std::string> IdentityList;
 	typedef std::vector<std::filesystem::path> PathList;
 	typedef std::vector<std::string> FileList;
@@ -543,12 +544,24 @@ namespace jenova
 		DirecotryList scriptDirectoriesReleative;
 		size_t directoryCount = 0;
 	};
+	struct ScriptFunction
+	{
+		String functionName;
+		String ownerScriptUID;
+		MethodInfo methodInfo;
+		int functionID;
+	};
 	struct ScriptProperty
 	{
 		String propertyName;
 		String ownerScriptUID;
 		PropertyInfo propertyInfo;
 		Variant defaultValue;
+	};
+	struct ScriptFunctionContainer
+	{
+		String scriptUID;
+		Vector<ScriptFunction> scriptFunctions;
 	};
 	struct ScriptPropertyContainer
 	{
@@ -789,7 +802,7 @@ namespace jenova
 	jenova::SmartWstring ConvertToWideStdString(const godot::String& gstr);
 	std::string GetNameFromPath(godot::String gstr);
 	String GenerateStandardUIDFromPath(String resourcePath);
-	String GenerateStandardUIDFromPath(Resource* resourcePtr);
+	String GenerateStandardUIDFromPath(const Resource* resourcePtr);
 	std::string GenerateRandomHashString();
 	std::string GenerateTerminalLogTime();
 	jenova::EngineMode GetCurrentEngineInstanceMode();

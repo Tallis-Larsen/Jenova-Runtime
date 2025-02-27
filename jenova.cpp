@@ -464,8 +464,8 @@ namespace jenova
 			bool UnRegisterDebuggerPlugins()
 			{
 				// Remove Debugger Plugin to Editor
-				 this->remove_debugger_plugin(debuggerPlugin);
-				 debuggerPlugin.unref();
+				this->remove_debugger_plugin(debuggerPlugin);
+				debuggerPlugin.unref();
 
 				// All Good
 				return true;
@@ -530,7 +530,7 @@ namespace jenova
 
 						// Interpreter Backend Property
 						PropertyInfo InterpreterBackendProperty(Variant::INT, InterpreterBackendConfigPath,
-							PropertyHint::PROPERTY_HINT_ENUM, "NitroJIT (Fastest),Meteora (Experimental),A.K.I.R.A (Unavailable),AngelVM (Unavailable)",
+							PropertyHint::PROPERTY_HINT_ENUM, "NitroJIT (Fastest),Meteora (Fast),A.K.I.R.A (Unavailable),AngelVM (Unavailable)",
 							PROPERTY_USAGE_DEFAULT, JenovaEditorSettingsCategory);
 						editor_settings->add_property_info(InterpreterBackendProperty);
 						editor_settings->set_initial_value(InterpreterBackendConfigPath, int32_t(InterpreterBackendDefaultMode), false);
@@ -1385,7 +1385,6 @@ namespace jenova
 				for (size_t i = 0; i < ScriptManager::get_singleton()->get_script_object_count(); i++)
 				{
 					Ref<CPPScript> scriptObject = ScriptManager::get_singleton()->get_script_object(i);
-					if (!scriptObject->HasValidScriptIdentity()) scriptObject->GenerateScriptIdentity();
 					usedScripts.insert(std::make_pair(AS_STD_STRING(scriptObject->GetScriptIdentity()), scriptObject));
 					jenova::Output("C++ Script Object In Use ([color=#91b553]%s[/color]) Collected.", AS_C_STRING(scriptObject->GetScriptIdentity()));
 				}
@@ -1457,7 +1456,6 @@ namespace jenova
 					{
 						// Get C++ Script Object
 						Ref<CPPScript> scriptResource = Object::cast_to<CPPScript>(cppResource.ptr());
-						if (!scriptResource->HasValidScriptIdentity()) scriptResource->GenerateScriptIdentity();
 						bool isUsedScript = usedScripts.contains(AS_STD_STRING(scriptResource->GetScriptIdentity()));
 
 						// Verbose
@@ -3876,6 +3874,7 @@ namespace jenova
 		public:
 			void _setup_session(int32_t p_session_id) override
 			{
+				jenova::Output("_setup_session %d", p_session_id);
 				currentSessionID = p_session_id;
 			}
 			bool _has_capture(const String& p_capture) const override
@@ -3885,7 +3884,20 @@ namespace jenova
 			}
 			bool _capture(const String& p_message, const Array& p_data, int32_t p_session_id) override
 			{
+				jenova::Output("_capture %s %d", AS_C_STRING(p_message), p_session_id);
 				return false;
+			}
+			void _goto_script_line(const Ref<Script>& p_script, int32_t p_line) override
+			{
+				jenova::Output("_goto_script_line %s %d", AS_C_STRING(p_script->get_path()), p_line);
+			}
+			void _breakpoints_cleared_in_tree() override
+			{
+				jenova::Output("_breakpoints_cleared_in_tree");
+			}
+			void _breakpoint_set_in_tree(const Ref<Script>& p_script, int32_t p_line, bool p_enabled) override
+			{
+				jenova::Output("_breakpoint_set_in_tree %s %d %s", AS_C_STRING(p_script->get_path()), p_line, p_enabled ? "true" : "false");
 			}
 		};
 
@@ -5369,7 +5381,7 @@ namespace jenova
 	{
 		return resourcePath.sha1_text().substr(0, 20);
 	}
-	String GenerateStandardUIDFromPath(Resource* resourcePtr)
+	String GenerateStandardUIDFromPath(const Resource* resourcePtr)
 	{
 		return GenerateStandardUIDFromPath(resourcePtr->get_path());
 	}
@@ -6575,9 +6587,6 @@ namespace jenova
 			{
 				// Get C++ Script Object
 				Ref<CPPScript> cppScript = Object::cast_to<CPPScript>(cppResource.ptr());
-
-				// Update Identity
-				if (!cppScript->HasValidScriptIdentity()) cppScript->GenerateScriptIdentity();
 
 				// Get Paths
 				std::filesystem::path cppFilePath = std::filesystem::absolute(AS_STD_STRING(ProjectSettings::get_singleton()->globalize_path(cppScript->get_path())));
@@ -7877,6 +7886,10 @@ namespace jenova
 		std::string typeNameCleaned = typeName;
 		CleanVariantTypeName(typeNameCleaned);
 
+		// Special Types
+		if (typeNameCleaned == "void") return Variant::Type::NIL;
+		if (typeNameCleaned == "jenova::sdk::Caller") return Variant::Type::NIL;
+
 		// Atomic types
 		if (typeNameCleaned == "bool") return Variant::Type::BOOL;
 		if (typeNameCleaned == "int" || typeNameCleaned == "int32_t" || typeNameCleaned == "int64_t") return Variant::Type::INT;
@@ -8618,7 +8631,6 @@ namespace jenova
 			if (cppResource->is_class(jenova::GlobalSettings::JenovaScriptType))
 			{
 				Ref<CPPScript> cppScript = Object::cast_to<CPPScript>(cppResource.ptr());
-				if (!cppScript->HasValidScriptIdentity()) cppScript->GenerateScriptIdentity();
 				if (AS_STD_STRING(cppScript->GetScriptIdentity()) == scriptUID) return AS_STD_STRING(cppScript->get_path());
 			}
 		}

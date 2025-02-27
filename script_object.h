@@ -29,11 +29,19 @@ class CPPScript : public ScriptExtension
 
 protected:
 	static void _bind_methods();
+
+private:
+	// Internal Values
 	String source_code;
-	String scriptObjectIdentity = "";
 	StringName globalName = jenova::GlobalSettings::JenovaScriptType;
 	Ref<Mutex> scriptMutex;
 	bool IsTool = false;
+
+public:
+	// Script Class Information
+	StringName scriptClassName;
+	StringName scriptClassType;
+	String scriptClassPath;
 
 public:
 	// Base Methods
@@ -76,10 +84,7 @@ public:
 public:
 	// Methods
 	void SetDefaultSourceCode();
-	jenova::ScriptIdentifier GenerateScriptIdentity();
-	jenova::ScriptIdentifier GetScriptIdentity();
-	bool HasValidScriptIdentity() const;
-	bool SetScriptIdentity(jenova::ScriptIdentifier identity);
+	jenova::ScriptIdentifier GetScriptIdentity() const;
 	void ReloadScriptSourceCode();
 
 	// Extra
