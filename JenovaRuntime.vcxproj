@@ -75,6 +75,9 @@ if exist "$(BuildPath)JenovaSDK\Jenova.SDK.x64.lib" del "$(BuildPath)JenovaSDK\J
 ren "$(BuildPath)JenovaSDK\$(TargetName).lib" "Jenova.SDK.x64.lib"
 rundll32.exe "$(TargetPath)",Deploy --command increment-build-number /in:"$(SolutionDir)jenova.hpp"</Command>
     </PostBuildEvent>
+    <ResourceCompile>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-c65001 %(AdditionalOptions)</AdditionalOptions>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="asset_monitor.cpp" />

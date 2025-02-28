@@ -30,8 +30,10 @@
 #else
     #ifdef JENOVA_SDK_BUILD
         #define JENOVA_API JENOVA_API_EXPORT
+		#define JENOVA_C_API extern "C" JENOVA_API_EXPORT
     #else
         #define JENOVA_API JENOVA_API_IMPORT
+		#define JENOVA_C_API extern "C" JENOVA_API_IMPORT
     #endif
 #endif
 
@@ -237,7 +239,7 @@ namespace jenova::sdk
 	extern JenovaSDK* bridge;
 
 	// JenovaSDK Interface Management
-	extern "C" JENOVA_API JenovaSDKInterface GetJenovaSDKInterface();
+	JENOVA_C_API JenovaSDKInterface GetSDKInterface();
 
 	// Helpers Utilities :: Wrappers
 	JENOVA_WRAPPER bool IsEditor()

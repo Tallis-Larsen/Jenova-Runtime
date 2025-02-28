@@ -575,9 +575,9 @@ namespace jenova
 	}
 
 	// Exported API
-	JenovaSDKInterface GetJenovaSDKInterface()
+	JenovaSDKInterface jenova::sdk::GetSDKInterface()
 	{
-		return sdk::bridge;
+		return bridge;
 	}
 }
 
