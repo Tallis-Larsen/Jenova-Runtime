@@ -20,11 +20,11 @@
 #define APP_COMPANYNAME					"MemarDesign™ LLC."
 #define APP_DESCRIPTION					"Real-Time C++ Scripting System for Godot Game Engine, Developed By Hamid.Memar."
 #define APP_COPYRIGHT					"Copyright MemarDesign™ LLC. (©) 2024-2025, All Rights Reserved."
-#define APP_VERSION						"0.3.6.6"
+#define APP_VERSION						"0.3.6.7"
 #define APP_VERSION_MIDDLEFIX			" "
 #define APP_VERSION_POSTFIX				"Beta"
 #define APP_VERSION_SINGLECHAR			"a"
-#define APP_VERSION_DATA				0, 3, 6, 6
+#define APP_VERSION_DATA				0, 3, 6, 7
 #define APP_VERSION_BUILD				"0"
 #define APP_VERSION_NAME				"Dragon"
 
@@ -331,6 +331,7 @@ namespace jenova
 	typedef struct SmartWstring { std::wstring* wstr; ~SmartWstring() { if (wstr) delete wstr; }} SmartWstring;
 	typedef void* FunctionPointer;
 	typedef void* PropertyPointer;
+	typedef void* JenovaSDKInterface;
 
 	// Enumerators
 	enum class TargetPlatform
@@ -627,6 +628,7 @@ namespace jenova
 		GDExtensionInterfaceGetProcAddress		godotGetProcAddress;
 		GDExtensionClassLibraryPtr				godotExtensionClassLibraryPtr;
 		GDExtensionInitialization*				godotExtensionInitialization;
+		JenovaSDKInterface						jenovaSDKInterface = nullptr;
 	};
 	struct VisualStudioInstance
 	{
@@ -930,6 +932,10 @@ namespace jenova
 	static LONG WINAPI JenovaGlobalCrashHandler(EXCEPTION_POINTERS* exceptionInfo);
 	LONG WINAPI JenovaExecutionCrashHandler(EXCEPTION_POINTERS* exceptionInfo);
 	#endif
+
+	// SDK Management
+	JenovaSDKInterface CreateJenovaSDKInterface();
+	bool ReleaseJenovaSDKInterface(JenovaSDKInterface sdkInterface);
 }
 
 // Jenova Tools

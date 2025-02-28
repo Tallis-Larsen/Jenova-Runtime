@@ -20,6 +20,7 @@
 // C++ SDK
 #include <stdarg.h>
 #include <iostream>
+#include <functional>
 
 // Godot SDK
 #include <gdextension_interface.h>
@@ -111,23 +112,23 @@ static void CollectNodesByClassName(godot::Node* node, const godot::String& clas
 namespace jenova::sdk
 {
 	// Helpers Utilities
-	bool IsEditor()
+	bool JenovaSDK::IsEditor()
 	{
 		return godot::Engine::get_singleton()->is_editor_hint();
 	}
-	bool IsGame()
+	bool JenovaSDK::IsGame()
 	{
 		if (IsEditor()) return false;
 		if (godot::OS::get_singleton()->is_debug_build()) return false;
 		return true;
 	}
-	godot::Node* GetNodeByPath(const godot::String& path)
+	godot::Node* JenovaSDK::GetNodeByPath(const godot::String& path)
 	{
 		godot::SceneTree* scene_tree = dynamic_cast<godot::SceneTree*>(godot::Engine::get_singleton()->get_main_loop());
 		if (scene_tree) return scene_tree->get_root()->get_node<godot::Node>(godot::NodePath(path));
 		return nullptr;
 	}
-	godot::Node* FindNodeByName(godot::Node* parent, const godot::String& name)
+	godot::Node* JenovaSDK::FindNodeByName(godot::Node* parent, const godot::String& name)
 	{
 		if (!parent) return nullptr;
 		if (parent->get_name() == name) return parent;
@@ -139,63 +140,48 @@ namespace jenova::sdk
 		}
 		return nullptr;
 	}
-	StringPtr GetNodeUniqueID(godot::Node* node)
+	StringPtr JenovaSDK::GetNodeUniqueID(godot::Node* node)
 	{
 		return GetCStr(godot::String(node->get_path()).md5_text());
 	}
-	godot::SceneTree* GetTree()
+	godot::SceneTree* JenovaSDK::GetTree()
 	{
 		godot::SceneTree* scene_tree = dynamic_cast<godot::SceneTree*>(godot::Engine::get_singleton()->get_main_loop());
 		return scene_tree;
 	}
-	double GetTime()
+	double JenovaSDK::GetTime()
 	{
 		int64_t time_msec = godot::Time::get_singleton()->get_ticks_msec();
 		return static_cast<double>(time_msec) / 1000.0f;
 	}
-	godot::String Format(StringPtr format, ...)
+	godot::String JenovaSDK::Format(StringPtr format, va_list args)
 	{
 		char buffer[1024];
-		va_list args;
-		va_start(args, format);
 		vsnprintf(buffer, sizeof(buffer), format, args);
-		va_end(args);
 		return godot::String(buffer);
 	}
-	godot::String Format(WideStringPtr format, ...)
+	godot::String JenovaSDK::Format(WideStringPtr format, va_list args)
 	{
 		wchar_t buffer[1024];
-		va_list args;
-		va_start(args, format);
 		vswprintf(buffer, sizeof(buffer) / sizeof(wchar_t), format, args);
-		va_end(args);
 		return godot::String(buffer);
 	}
-	void Output(StringPtr format, ...)
+	void JenovaSDK::Output(StringPtr format, va_list args)
 	{
 		char buffer[1024];
-		va_list args;
-		va_start(args, format);
 		vsnprintf(buffer, sizeof(buffer), format, args);
-		va_end(args);
 		godot::UtilityFunctions::print(godot::String("[JENOVA-SDK] > ") + godot::String(buffer));
 	}
-	void Output(WideStringPtr format, ...)
+	void JenovaSDK::Output(WideStringPtr format, va_list args)
 	{
 		wchar_t buffer[1024];
-		va_list args;
-		va_start(args, format);
 		vswprintf(buffer, sizeof(buffer) / sizeof(wchar_t), format, args);
-		va_end(args);
 		godot::UtilityFunctions::print(godot::String(L"[JENOVA-SDK] > ") + godot::String(buffer));
 	}
-	void DebugOutput(StringPtr format, ...)
+	void JenovaSDK::DebugOutput(StringPtr format, va_list args)
 	{
 		char buffer[1024];
-		va_list args;
-		va_start(args, format);
 		vsnprintf(buffer, sizeof(buffer), format, args);
-		va_end(args);
 		std::string debugMessage = "[JENOVA-SDK] ::> ";
 		debugMessage += buffer;
 
@@ -206,13 +192,10 @@ namespace jenova::sdk
 			std::clog << debugMessage << std::endl;
 		#endif
 	}
-	void DebugOutput(WideStringPtr format, ...)
+	void JenovaSDK::DebugOutput(WideStringPtr format, va_list args)
 	{
 		wchar_t buffer[1024];
-		va_list args;
-		va_start(args, format);
 		vswprintf(buffer, sizeof(buffer) / sizeof(wchar_t), format, args);
-		va_end(args);
 		std::wstring debugMessage = L"[JENOVA-SDK] ::> ";
 		debugMessage += buffer;
 
@@ -223,7 +206,7 @@ namespace jenova::sdk
 			std::wclog << debugMessage << std::endl;
 		#endif
 	}
-	StringPtr GetCStr(const godot::String& godotStr)
+	StringPtr JenovaSDK::GetCStr(const godot::String& godotStr)
 	{
 		std::string str((char*)godotStr.utf8().ptr(), godotStr.utf8().size());
 		if (!str.empty() && str.back() == '\0') str.pop_back();
@@ -235,7 +218,7 @@ namespace jenova::sdk
 			return strdup(str.c_str());
 		#endif
 	}
-	WideStringPtr GetWCStr(const godot::String& godotStr)
+	WideStringPtr JenovaSDK::GetWCStr(const godot::String& godotStr)
 	{
 		godot::PackedByteArray wchar_buffer = godotStr.to_wchar_buffer();
 		size_t length = wchar_buffer.size() / sizeof(wchar_t);
@@ -249,7 +232,7 @@ namespace jenova::sdk
 				return wcsdup(str.c_str());
 		#endif
 	}
-	bool SetClassIcon(const godot::String& className, const godot::Ref<godot::Texture2D> iconImage)
+	bool JenovaSDK::SetClassIcon(const godot::String& className, const godot::Ref<godot::Texture2D> iconImage)
 	{
 		if (!godot::ClassDB::class_exists(className)) return false;
 		godot::Ref<godot::Theme> editor_theme = godot::EditorInterface::get_singleton()->get_editor_theme();
@@ -257,7 +240,7 @@ namespace jenova::sdk
 		editor_theme->set_icon(className, "EditorIcons", iconImage);
 		return true;
 	}
-	double MatchScaleFactor(double inputSize)
+	double JenovaSDK::MatchScaleFactor(double inputSize)
 	{
 		if (IsEditor())
 		{
@@ -269,139 +252,136 @@ namespace jenova::sdk
 			return inputSize;
 		}
 	}
-	godot::Error CreateSignalCallback(godot::Object* object, const godot::String& signalName, FunctionPtr callbackPtr)
+	godot::Error JenovaSDK::CreateSignalCallback(godot::Object* object, const godot::String& signalName, FunctionPtr callbackPtr)
 	{
 		return object->connect(signalName, callable_mp(memnew(EventCallback(callbackPtr)), &EventCallback::OnEventCall));
 	}
 
 	// Hot-Reloading Utilities (Sakura)
-	namespace sakura
+	bool JenovaSDK::SupportsReload()
 	{
-		bool SupportsReload()
-		{
-			if (IsEditor()) return godot::EditorInterface::get_singleton()->has_method("get_open_scenes_roots");
-			return true;
-		}
-		void PrepareReload(const godot::String& className)
-		{
-			// Disable Hot-Reloading In Static SDK
-			#ifdef JENOVA_SDK_STATIC
-				return;
-			#endif
+		if (IsEditor()) return godot::EditorInterface::get_singleton()->has_method("get_open_scenes_roots");
+		return true;
+	}
+	void JenovaSDK::PrepareReload(const godot::String& className)
+	{
+		// Disable Hot-Reloading In Static SDK
+		#ifdef JENOVA_SDK_STATIC
+			return;
+		#endif
 
-			// Validate
-			if (!godot::ClassDB::class_exists(className)) return;
+		// Validate
+		if (!godot::ClassDB::class_exists(className)) return;
 	
-			// Validate Scene Tree [Required!]
-			if (!GetTree()) return;
+		// Validate Scene Tree [Required!]
+		if (!GetTree()) return;
 
-			// Deselect Nodes
-			if (IsEditor()) godot::EditorInterface::get_singleton()->get_selection()->clear();
+		// Deselect Nodes
+		if (IsEditor()) godot::EditorInterface::get_singleton()->get_selection()->clear();
 
-			// Get Opened Scenes
-			godot::Array openedScenes;
-			if (IsEditor()) openedScenes = godot::EditorInterface::get_singleton()->get_open_scenes_roots();
-			else openedScenes.push_back(GetTree()->get_root());
-			for (size_t i = 0; i < openedScenes.size(); i++)
+		// Get Opened Scenes
+		godot::Array openedScenes;
+		if (IsEditor()) openedScenes = godot::EditorInterface::get_singleton()->get_open_scenes_roots();
+		else openedScenes.push_back(GetTree()->get_root());
+		for (size_t i = 0; i < openedScenes.size(); i++)
+		{
+			// Get Scene Root
+			godot::Node* sceneRoot = (godot::Node*)openedScenes[i]._native_ptr();
+
+			// Validate Scene Root
+			if (!sceneRoot) continue;
+
+			// Collect Nodes With Class Name
+			godot::Vector<godot::Node*> classNodes;
+			CollectNodesByClassName(sceneRoot, className, classNodes);
+
+			// Backup Nodes
+			for (const auto& classNode : classNodes)
 			{
-				// Get Scene Root
-				godot::Node* sceneRoot = (godot::Node*)openedScenes[i]._native_ptr();
+				// Create Node Backup
+				NodeBackup nodebackup;
+				nodebackup.nodeName = classNode->get_name();
+				nodebackup.nodeClass = godot::String(className);
+				nodebackup.sceneRoot = sceneRoot;
+				nodebackup.scenePath = sceneRoot->get_scene_file_path();
 
-				// Validate Scene Root
-				if (!sceneRoot) continue;
+				// Duplicate Node to Backup [Due to Issue #81982]
+				godot::Node* classNodeClone = classNode->duplicate();
 
-				// Collect Nodes With Class Name
-				godot::Vector<godot::Node*> classNodes;
-				CollectNodesByClassName(sceneRoot, className, classNodes);
+				// Pack Current Scene
+				nodebackup.nodeBackup = memnew(godot::PackedScene);
+				nodebackup.nodeBackup->pack(classNodeClone);
+				memdelete(classNodeClone); // classNodeClone->queue_free();
 
-				// Backup Nodes
-				for (const auto& classNode : classNodes)
-				{
-					// Create Node Backup
-					NodeBackup nodebackup;
-					nodebackup.nodeName = classNode->get_name();
-					nodebackup.nodeClass = godot::String(className);
-					nodebackup.sceneRoot = sceneRoot;
-					nodebackup.scenePath = sceneRoot->get_scene_file_path();
+				// Replace With Dummy Node
+				nodebackup.dummyNode = memnew(godot::Node);
+				classNode->replace_by(nodebackup.dummyNode, true);
+				memdelete(classNode); // classNode->queue_free();
 
-					// Duplicate Node to Backup [Due to Issue #81982]
-					godot::Node* classNodeClone = classNode->duplicate();
-
-					// Pack Current Scene
-					nodebackup.nodeBackup = memnew(godot::PackedScene);
-					nodebackup.nodeBackup->pack(classNodeClone);
-					memdelete(classNodeClone); // classNodeClone->queue_free();
-
-					// Replace With Dummy Node
-					nodebackup.dummyNode = memnew(godot::Node);
-					classNode->replace_by(nodebackup.dummyNode, true);
-					memdelete(classNode); // classNode->queue_free();
-
-					// Add to Dummy Nodes
-					nodeBackups.push_back(nodebackup);
-				}
+				// Add to Dummy Nodes
+				nodeBackups.push_back(nodebackup);
 			}
 		}
-		void FinishReload(const godot::String& className)
+	}
+	void JenovaSDK::FinishReload(const godot::String& className)
+	{
+		// Disable Hot-Reloading In Static SDK
+		#ifdef JENOVA_SDK_STATIC
+			return;
+		#endif
+
+		// Validate
+		if (!godot::ClassDB::class_exists(className)) return;
+
+		// Create Class Name
+		godot::String backupClassName(className);
+
+		// Restore Nodes
+		for (int i = 0; i < nodeBackups.size(); ++i)
 		{
-			// Disable Hot-Reloading In Static SDK
-			#ifdef JENOVA_SDK_STATIC
-				return;
-			#endif
+			// Get Node Backup
+			NodeBackup nodeBackup = nodeBackups[i];
 
-			// Validate
-			if (!godot::ClassDB::class_exists(className)) return;
+			// Validate Node Class
+			if (nodeBackup.nodeClass != backupClassName) return;
 
-			// Create Class Name
-			godot::String backupClassName(className);
+			// Validate Backup Data
+			if (!nodeBackup.sceneRoot) return;
 
-			// Restore Nodes
-			for (int i = 0; i < nodeBackups.size(); ++i)
+			// Check for Feature
+			if (!IsEditor())
 			{
-				// Get Node Backup
-				NodeBackup nodeBackup = nodeBackups[i];
-
-				// Validate Node Class
-				if (nodeBackup.nodeClass != backupClassName) return;
-
-				// Validate Backup Data
-				if (!nodeBackup.sceneRoot) return;
-
-				// Check for Feature
-				if (!IsEditor())
+				godot::Dictionary versionInfo = godot::Engine::get_singleton()->get_version_info();
+				if (godot::String(versionInfo["build"]) != "jenova")
 				{
-					godot::Dictionary versionInfo = godot::Engine::get_singleton()->get_version_info();
-					if (godot::String(versionInfo["build"]) != "jenova")
-					{
-						godot::UtilityFunctions::push_error("[Jenova::Sakura] Runtime Hot-Reloading for GDExtension Classes Only is Supported in Jenova Editions of Godot.");
-						auto* placeholderNode = memnew(godot::Node);
-						nodeBackup.dummyNode->replace_by(placeholderNode, true);
-						memdelete(nodeBackup.dummyNode);
-						memdelete(nodeBackup.nodeBackup);
-						nodeBackups.remove_at(i);
-						--i;
-						continue;
-					}
-				}
-
-				// Restore Nodes From Backup
-				godot::Node* originalNode = nodeBackup.nodeBackup->instantiate(godot::PackedScene::GenEditState::GEN_EDIT_STATE_DISABLED);
-				if (originalNode)
-				{
-					nodeBackup.dummyNode->replace_by(originalNode, true);
+					godot::UtilityFunctions::push_error("[Jenova::Sakura] Runtime Hot-Reloading for GDExtension Classes Only is Supported in Jenova Editions of Godot.");
+					auto* placeholderNode = memnew(godot::Node);
+					nodeBackup.dummyNode->replace_by(placeholderNode, true);
 					memdelete(nodeBackup.dummyNode);
 					memdelete(nodeBackup.nodeBackup);
 					nodeBackups.remove_at(i);
 					--i;
+					continue;
 				}
 			}
+
+			// Restore Nodes From Backup
+			godot::Node* originalNode = nodeBackup.nodeBackup->instantiate(godot::PackedScene::GenEditState::GEN_EDIT_STATE_DISABLED);
+			if (originalNode)
+			{
+				nodeBackup.dummyNode->replace_by(originalNode, true);
+				memdelete(nodeBackup.dummyNode);
+				memdelete(nodeBackup.nodeBackup);
+				nodeBackups.remove_at(i);
+				--i;
+			}
 		}
-		void Dispose(const godot::String& className)
-		{
-			godot::StringName classNameStr(className);
-			if (!godot::ClassDB::class_exists(classNameStr)) return;
-			godot::internal::gdextension_interface_classdb_unregister_extension_class(godot::internal::library, classNameStr._native_ptr());
-		}
+	}
+	void JenovaSDK::Dispose(const godot::String& className)
+	{
+		godot::StringName classNameStr(className);
+		if (!godot::ClassDB::class_exists(classNameStr)) return;
+		godot::internal::gdextension_interface_classdb_unregister_extension_class(godot::internal::library, classNameStr._native_ptr());
 	}
 }
 
@@ -412,16 +392,13 @@ namespace jenova::sdk
 namespace jenova::sdk
 {
 	// Helpers Utilities
-	void Alert(StringPtr fmt, ...)
+	void JenovaSDK::Alert(StringPtr fmt, va_list args)
 	{
 		char buffer[1024];
-		va_list args;
-		va_start(args, fmt);
 		vsnprintf(buffer, sizeof(buffer), fmt, args);
-		va_end(args);
 		ShowMessageBox(buffer, "[JENOVA-SDK]", 0);
 	}
-	jenova::sdk::EngineMode GetEngineMode()
+	jenova::sdk::EngineMode JenovaSDK::GetEngineMode()
 	{
 		return jenova::sdk::EngineMode(jenova::GlobalStorage::CurrentEngineMode);
 		jenova::sdk::EngineMode engineMode;
@@ -430,66 +407,66 @@ namespace jenova::sdk
 		if (Engine::get_singleton()->is_editor_hint()) engineMode = jenova::sdk::EngineMode::Editor;
 		return engineMode;
 	}
-	bool CreateDirectoryMonitor(const String& directoryPath)
+	bool JenovaSDK::CreateDirectoryMonitor(const String& directoryPath)
 	{
 		if (!JenovaAssetMonitor::get_singleton()) return false;
 		if (!JenovaAssetMonitor::get_singleton()->AddDirectory(directoryPath)) return false;
 		return true;
 	}
-	bool CreateFileMonitor(const String& filePath)
+	bool JenovaSDK::CreateFileMonitor(const String& filePath)
 	{
 		if (!JenovaAssetMonitor::get_singleton()) return false;
 		if (!JenovaAssetMonitor::get_singleton()->AddFile(filePath)) return false;
 		return true;
 	}
-	bool RegisterFileMonitorCallback(FileSystemCallback callbackPtr)
+	bool JenovaSDK::RegisterFileMonitorCallback(FileSystemCallback callbackPtr)
 	{
 		if (!JenovaAssetMonitor::get_singleton()) return false;
 		if (!JenovaAssetMonitor::get_singleton()->RegisterCallback(jenova::AssetMonitor::AssetMonitorCallback(callbackPtr))) return false;
 		return true;
 	}
-	bool UnregisterFileMonitorCallback(FileSystemCallback callbackPtr)
+	bool JenovaSDK::UnregisterFileMonitorCallback(FileSystemCallback callbackPtr)
 	{
 		if (!JenovaAssetMonitor::get_singleton()) return false;
 		if (!JenovaAssetMonitor::get_singleton()->UnregisterCallback(jenova::AssetMonitor::AssetMonitorCallback(callbackPtr))) return false;
 		return true;
 	}
-	bool ReloadJenovaRuntime(RuntimeReloadMode reloadMode)
+	bool JenovaSDK::ReloadJenovaRuntime(RuntimeReloadMode reloadMode)
 	{
 		jenova::sdk::Output("ReloadJenovaRuntime -> Not Implemented Yet");
 		return false;
 	}
-	void CreateCheckpoint(const godot::String& checkPointName)
+	void JenovaSDK::CreateCheckpoint(const godot::String& checkPointName)
 	{
 		JenovaTinyProfiler::CreateCheckpoint(AS_STD_STRING(checkPointName));
 	}
-	double GetCheckpointTime(const godot::String& checkPointName)
+	double JenovaSDK::GetCheckpointTime(const godot::String& checkPointName)
 	{
 		return JenovaTinyProfiler::GetCheckpointTime(AS_STD_STRING(checkPointName));
 	}
-	void DeleteCheckpoint(const godot::String& checkPointName)
+	void JenovaSDK::DeleteCheckpoint(const godot::String& checkPointName)
 	{
 		JenovaTinyProfiler::DeleteCheckpoint(AS_STD_STRING(checkPointName));
 	}
-	double GetCheckpointTimeAndDispose(const godot::String& checkPointName)
+	double JenovaSDK::GetCheckpointTimeAndDispose(const godot::String& checkPointName)
 	{
 		return JenovaTinyProfiler::GetCheckpointTimeAndDispose(AS_STD_STRING(checkPointName));
 	}
-	bool RegisterRuntimeCallback(RuntimeCallback callbackPtr)
+	bool JenovaSDK::RegisterRuntimeCallback(RuntimeCallback callbackPtr)
 	{
 		return jenova::RegisterRuntimeEventCallback((jenova::FunctionPointer)callbackPtr);
 	}
-	bool UnregisterRuntimeCallback(RuntimeCallback callbackPtr)
+	bool JenovaSDK::UnregisterRuntimeCallback(RuntimeCallback callbackPtr)
 	{
 		return jenova::UnregisterRuntimeEventCallback((jenova::FunctionPointer)callbackPtr);
 	}
 
 	// Graphic Utilities
-	NativePtr GetGameWindowHandle()
+	NativePtr JenovaSDK::GetGameWindowHandle()
 	{
 		return NativePtr(jenova::GetMainWindowNativeHandle());
 	}
-	StringPtr GetRenderingDriverName()
+	StringPtr JenovaSDK::GetRenderingDriverName()
 	{
 		auto projectSetting = ProjectSettings::get_singleton();
 		#if defined(_WIN32) || defined(_WIN64)
@@ -498,7 +475,7 @@ namespace jenova::sdk
 			return GetCStr(String(projectSetting->get_setting("rendering/rendering_device/driver")));
 		#endif
 	}
-	NativePtr GetRenderingDriverResource(DriverResourceID resourceType)
+	NativePtr JenovaSDK::GetRenderingDriverResource(DriverResourceID resourceType)
 	{
 		godot::RenderingDevice* device = godot::RenderingServer::get_singleton()->get_rendering_device();
 		if (device) return reinterpret_cast<NativePtr>(device->get_driver_resource(godot::RenderingDevice::DriverResource(resourceType), RID(), 0));
@@ -506,13 +483,13 @@ namespace jenova::sdk
 	}
 
 	// Memory Management Utilities (Anzen)
-	NativePtr GetGlobalPointer(MemoryID id)
+	NativePtr JenovaSDK::GetGlobalPointer(MemoryID id)
 	{
 		auto it = globalMemoryMap.find(id);
 		if (it != globalMemoryMap.end()) return it->second;
 		return nullptr;
 	}
-	NativePtr SetGlobalPointer(MemoryID id, NativePtr ptr)
+	NativePtr JenovaSDK::SetGlobalPointer(MemoryID id, NativePtr ptr)
 	{
 		auto it = globalMemoryMap.find(id);
 		if (it != globalMemoryMap.end())
@@ -526,18 +503,18 @@ namespace jenova::sdk
 			return ptr;
 		}
 	}
-	void DeleteGlobalPointer(MemoryID id)
+	void JenovaSDK::DeleteGlobalPointer(MemoryID id)
 	{
 		globalMemoryMap.erase(id);
 	}
-	NativePtr AllocateGlobalMemory(MemoryID id, size_t size)
+	NativePtr JenovaSDK::AllocateGlobalMemory(MemoryID id, size_t size)
 	{
 		NativePtr mem = jenova::AllocateMemory(size);
 		if (!mem) return nullptr;
 		globalMemoryMap[id] = mem;
 		return mem;
 	}
-	void FreeGlobalMemory(MemoryID id)
+	void JenovaSDK::FreeGlobalMemory(MemoryID id)
 	{
 		auto it = globalMemoryMap.find(id);
 		if (it != globalMemoryMap.end())
@@ -548,31 +525,59 @@ namespace jenova::sdk
 	}
 
 	// Global Variable Storage Utilities
-	godot::Variant GetGlobalVariable(VariableID id)
+	godot::Variant JenovaSDK::GetGlobalVariable(VariableID id)
 	{
 		return globalVariables[id];
 	}
-	void SetGlobalVariable(VariableID id, godot::Variant var)
+	void JenovaSDK::SetGlobalVariable(VariableID id, godot::Variant var)
 	{
 		globalVariables[id] = var;
 	}
-	void ClearGlobalVariables()
+	void JenovaSDK::ClearGlobalVariables()
 	{
 		globalVariables.clear();
 	}
 
 	// Task System Utilities
-	TaskID InitiateTask(TaskFunction function)
+	TaskID JenovaSDK::InitiateTask(TaskFunction function)
 	{
 		return JenovaTaskSystem::InitiateTask(function);
 	}
-	bool IsTaskComplete(TaskID taskID)
+	bool JenovaSDK::IsTaskComplete(TaskID taskID)
 	{
 		return JenovaTaskSystem::IsTaskComplete(taskID);
 	}
-	void ClearTask(TaskID taskID)
+	void JenovaSDK::ClearTask(TaskID taskID)
 	{
 		JenovaTaskSystem::ClearTask(taskID);
+	}
+}
+
+// SDK Management
+namespace jenova
+{
+	// JenovaSDK Interface Singleton
+	namespace sdk { JenovaSDK* bridge = nullptr; }
+
+	// Create/Release SDK Interface
+	JenovaSDKInterface CreateJenovaSDKInterface()
+	{
+		JenovaSDKInterface sdkInterface = new sdk::JenovaSDK();
+		sdk::bridge = (sdk::JenovaSDK*)sdkInterface;
+		return sdkInterface;
+	}
+	bool ReleaseJenovaSDKInterface(JenovaSDKInterface sdkInterface)
+	{
+		if (!sdkInterface) return false;
+		delete sdkInterface;
+		sdk::bridge = nullptr;
+		return true;
+	}
+
+	// Exported API
+	JenovaSDKInterface GetJenovaSDKInterface()
+	{
+		return sdk::bridge;
 	}
 }
 

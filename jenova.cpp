@@ -4160,6 +4160,12 @@ namespace jenova
 		{
 			/* Note: This Function Must Update Data Only If They Are Not Already Set!*/
 
+			// Initialize SDK Interface
+			if (GlobalStorage::ExtensionInitData.jenovaSDKInterface == nullptr)
+			{
+				GlobalStorage::ExtensionInitData.jenovaSDKInterface = jenova::CreateJenovaSDKInterface();
+			}
+
 			// Set Engine Mode
 			if (QUERY_ENGINE_MODE(Unknown))
 			{
@@ -4169,6 +4175,17 @@ namespace jenova
 
 				// Verbose Mode
 				jenova::Output("Running Jenova Core in [%s] Engine Mode.", AS_C_STRING(jenova::GetCurrentEngineInstanceModeAsString()));
+			}
+		}
+		static void OnExtensionRelease()
+		{
+			/* Note: This Function Must Update Data Only If They Are Not Already Unset!*/
+
+			// Release SDK Interface
+			if (GlobalStorage::ExtensionInitData.jenovaSDKInterface != nullptr)
+			{
+				jenova::ReleaseJenovaSDKInterface(GlobalStorage::ExtensionInitData.jenovaSDKInterface);
+				GlobalStorage::ExtensionInitData.jenovaSDKInterface = nullptr;
 			}
 		}
 		static void OnEnvironmentBoot()
@@ -4301,6 +4318,9 @@ namespace jenova
 				JenovaTemplateManager::deinit();
 				JenovaAssetMonitor::deinit();
 
+				// Release Extension
+				OnExtensionRelease();
+
 				// Verbose
 				jenova::Output("Jenova Editor Plugin Uninitialized.");
 			}
@@ -4327,6 +4347,9 @@ namespace jenova
 
 				// Uninitialize Runtime
 				JenovaRuntime::deinit();
+
+				// Release Extension
+				OnExtensionRelease();
 
 				// Exit (Temp Fix for TLS Handling Failure)
 				if (jenova::GlobalSettings::SafeExitOnPluginUnload && !QUERY_ENGINE_MODE(Editor)) jenova::ExitWithCode(EXIT_SUCCESS);
