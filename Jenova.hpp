@@ -20,11 +20,11 @@
 #define APP_COMPANYNAME					"MemarDesign™ LLC."
 #define APP_DESCRIPTION					"Real-Time C++ Scripting System for Godot Game Engine, Developed By Hamid.Memar."
 #define APP_COPYRIGHT					"Copyright MemarDesign™ LLC. (©) 2024-2025, All Rights Reserved."
-#define APP_VERSION						"0.3.6.7"
+#define APP_VERSION						"0.3.6.8"
 #define APP_VERSION_MIDDLEFIX			" "
 #define APP_VERSION_POSTFIX				"Beta"
 #define APP_VERSION_SINGLECHAR			"a"
-#define APP_VERSION_DATA				0, 3, 6, 7
+#define APP_VERSION_DATA				0, 3, 6, 8
 #define APP_VERSION_BUILD				"0"
 #define APP_VERSION_NAME				"Dragon"
 
@@ -112,12 +112,15 @@
 #include <functional>
 #include <filesystem>
 
-// Godot SDK
+// Godot SDK :: Core
 #include <gdextension_interface.h>
 #include <godot.hpp>
 #include <core/defs.hpp>
 #include <core/class_db.hpp>
 #include <core/object.hpp>
+#include <core/type_info.hpp>
+
+// Godot SDK :: Classes
 #include <classes/ref.hpp>
 #include <classes/os.hpp>
 #include <classes/engine.hpp>
@@ -141,7 +144,7 @@
 #include <classes/color_rect.hpp>
 #include <classes/window.hpp>
 #include <classes/shortcut.hpp>
-#include <variant/node_path.hpp>
+#include <classes/config_file.hpp>
 #include <classes/label.hpp>
 #include <classes/rich_text_label.hpp>
 #include <classes/button.hpp>
@@ -157,6 +160,7 @@
 #include <classes/editor_interface.hpp>
 #include <classes/editor_settings.hpp>
 #include <classes/editor_selection.hpp>
+#include <classes/editor_paths.hpp>
 #include <classes/editor_plugin.hpp>
 #include <classes/editor_plugin_registration.hpp>
 #include <classes/editor_export_platform.hpp>
@@ -183,14 +187,10 @@
 #include <classes/sub_viewport.hpp>
 #include <classes/sub_viewport_container.hpp>
 #include <classes/tab_bar.hpp>
-#include <templates/list.hpp>
-#include <templates/pair.hpp>
+#include <classes/code_edit.hpp>
 #include <classes/marshalls.hpp>
 #include <classes/reg_ex.hpp>
 #include <classes/reg_ex_match.hpp>
-#include <variant/string_name.hpp>
-#include <variant/variant.hpp>
-#include <templates/local_vector.hpp>
 #include <classes/resource_format_loader.hpp>
 #include <classes/resource_loader.hpp>
 #include <classes/resource_format_saver.hpp>
@@ -199,18 +199,6 @@
 #include <classes/timer.hpp>
 #include <classes/mutex.hpp>
 #include <classes/ref.hpp>
-#include <core/type_info.hpp>
-#include <templates/hash_map.hpp>
-#include <templates/hash_set.hpp>
-#include <templates/list.hpp>
-#include <templates/pair.hpp>
-#include <templates/self_list.hpp>
-#include <templates/vector.hpp>
-#include <variant/dictionary.hpp>
-#include <variant/packed_string_array.hpp>
-#include <variant/string.hpp>
-#include <variant/typed_array.hpp>
-#include <variant/variant.hpp>
 #include <classes/worker_thread_pool.hpp>
 #include <classes/dir_access.hpp>
 #include <classes/file_access.hpp>
@@ -219,7 +207,6 @@
 #include <classes/texture.hpp>
 #include <classes/texture2d.hpp>
 #include <classes/placeholder_texture2d.hpp>
-#include <variant/array.hpp>
 #include <classes/theme.hpp>
 #include <classes/image.hpp>
 #include <classes/image_texture.hpp>
@@ -232,6 +219,28 @@
 #include <classes/script_language_extension.hpp>
 #include <classes/confirmation_dialog.hpp>
 #include <classes/worker_thread_pool.hpp>
+
+// Godot SDK :: Templates
+#include <templates/hash_map.hpp>
+#include <templates/hash_set.hpp>
+#include <templates/list.hpp>
+#include <templates/pair.hpp>
+#include <templates/self_list.hpp>
+#include <templates/vector.hpp>
+#include <templates/list.hpp>
+#include <templates/pair.hpp>
+#include <templates/local_vector.hpp>
+
+// Godot SDK :: Variant
+#include <variant/array.hpp>
+#include <variant/node_path.hpp>
+#include <variant/string_name.hpp>
+#include <variant/variant.hpp>
+#include <variant/dictionary.hpp>
+#include <variant/packed_string_array.hpp>
+#include <variant/string.hpp>
+#include <variant/typed_array.hpp>
+#include <variant/variant.hpp>
 #include <variant/utility_functions.hpp>
 
 // GodotSDK/LithiumSDK

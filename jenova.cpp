@@ -1434,6 +1434,67 @@ namespace jenova
 					return false;
 				};
 
+				// Extract And Create Breakpoint Database
+				if (bool(jenovaCompiler->GetCompilerOption("cpp_generate_debug_info")))
+				{
+					// Parse Script Editor Cache File
+					String scriptEditorCacheFile = EditorInterface::get_singleton()->get_editor_paths()->get_project_settings_dir().path_join("script_editor_cache.cfg");
+					if (FileAccess::file_exists(scriptEditorCacheFile))
+					{
+						Ref<ConfigFile> scriptEditorConfig;
+						scriptEditorConfig.instantiate();
+						if (scriptEditorConfig->load(scriptEditorCacheFile) == Error::OK)
+						{
+							// Serialize Breakpoints to Database
+							try
+							{
+								jenova::Output("Creating Breakpoint Database Cache...");
+								nlohmann::json scriptBreakpointsSerializer;
+								scriptBreakpointsSerializer["Breakpoints"]["Scripts"] = nlohmann::json::object();
+								for (const String& scriptFile : scriptEditorConfig->get_sections())
+								{
+									Dictionary state = scriptEditorConfig->get_value(scriptFile, "state");
+									if (!state.has("breakpoints")) continue;
+
+									PackedInt32Array breakpoints = state["breakpoints"];
+									if (breakpoints.size() == 0) continue;
+									std::string uid = AS_STD_STRING(jenova::GenerateStandardUIDFromPath(scriptFile));
+									nlohmann::json& scriptEntry = scriptBreakpointsSerializer["Breakpoints"]["Scripts"][uid];
+									if (scriptEntry.is_null())
+									{
+										scriptEntry = {
+											{"Path", AS_STD_STRING(scriptFile)},
+											{"FullPath", AS_STD_STRING(ProjectSettings::get_singleton()->globalize_path(scriptFile))},
+											{"Lines", nlohmann::json::array()}};
+									}
+									for (int i = 0; i < breakpoints.size(); ++i)
+									{
+										int line = breakpoints[i];
+										scriptEntry["Lines"].push_back(line);
+									}
+								}
+								scriptEditorConfig.unref();
+
+								// Write Serialized Data to File
+								std::string breakpointsConfigFile = AS_STD_STRING(jenova::GetJenovaCacheDirectory() + "Jenova.Breakpoints.json");
+								if (!jenova::WriteStdStringToFile(breakpointsConfigFile, scriptBreakpointsSerializer.dump(2)))
+								{
+									jenova::Error("Jenova Builder", "Failed to Generate Breakpoint Database Cache File.");
+									DisposeCompiler();
+									return false;
+								};
+							}
+							catch (const std::exception&)
+							{
+								jenova::Error("Jenova Builder", "Failed to Serialize Breakpoints Database Cache File.");
+								scriptEditorConfig.unref();
+								DisposeCompiler();
+								return false;
+							}
+						};
+					}
+				}
+
 				// Create Preprocessor Settings
 				godot::Dictionary preprocessorSettings;
 				{
