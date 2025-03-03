@@ -831,6 +831,9 @@ namespace jenova
 				// Register Nodes Documentation
 				jenova::RegisterDocumentationFromByteArray(BUFFER_PTR_SIZE_PARAM(jenova::documentation::JenovaRuntimeXML));
 
+				// Register Scripts Documentation
+				jenova::UpdateScriptsDocumentation();
+
 				// Register Settings Documentation [ Disabled : This will replace entire Editor Settings ]
 				// jenova::RegisterDocumentationFromByteArray(BUFFER_PTR_SIZE_PARAM(jenova::documentation::EditorSettingsXML));
 
@@ -883,6 +886,8 @@ namespace jenova
 				toolsMenu->add_item("  Generate Encryption Key...  ", EDITOR_MENU_ID(GenerateEncryptionKey));
 				toolsMenu->add_item("  Backup Current Encryption Key...  ", EDITOR_MENU_ID(BackupCurrentEncryptionKey));
 				toolsMenu->add_separator();
+				toolsMenu->add_item("  Reload Script Documentation  ", EDITOR_MENU_ID(ReloadScriptDocumentation));
+				toolsMenu->add_separator();
 				toolsMenu->add_item("  Open Addon Explorer...  ", EDITOR_MENU_ID(OpenAddonExplorer));
 				toolsMenu->add_separator();
 				toolsMenu->add_item("  Open Script Manager...  ", EDITOR_MENU_ID(OpenScriptManager));
@@ -917,6 +922,7 @@ namespace jenova
 				auto packageIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_PACKAGE_ICON));
 				auto configureIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_CONFIGURE_ICON));
 				auto puzzleIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_PUZZLE_ICON));
+				auto bookIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_BOOK_ICON));
 
 				// Set Menu Icons
 				jenovaMenu->set_item_icon(jenovaMenu->get_item_index(EDITOR_MENU_ID(BuildSolution)), jenova::GetEditorIcon("PluginScript"));
@@ -934,6 +940,7 @@ namespace jenova
 				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(ClearCacheDatabase)), eraserIcon);
 				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(GenerateEncryptionKey)), keyTealIcon);
 				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(BackupCurrentEncryptionKey)), keyMaroonIcon);
+				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(ReloadScriptDocumentation)), bookIcon);
 				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(OpenAddonExplorer)), puzzleIcon);
 				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(OpenScriptManager)), compilerIcon);
 				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(OpenPackageManager)), packageIcon);
@@ -1203,6 +1210,9 @@ namespace jenova
 					break;
 				case jenova::EditorMenuID::BackupCurrentEncryptionKey:
 					jenova::Error("Jenova Main Menu", "Feature is Removed.");
+					break;
+				case jenova::EditorMenuID::ReloadScriptDocumentation:
+					if (jenova::UpdateScriptsDocumentation()) jenova::Output("C++ Scripts Documentation Rebuilt Successfully.");
 					break;
 				case jenova::EditorMenuID::OpenAddonExplorer:
 					jenova::Error("Jenova Main Menu", "Feature Not Implemented Yet");
@@ -8980,6 +8990,34 @@ namespace jenova
 		#else
 			return "Unknown";
 		#endif
+	}
+	bool UpdateScriptsDocumentation()
+	{
+		// Collect Scripts
+		jenova::ResourceCollection projectScripts;
+		jenova::CollectResourcesFromFileSystem("res://", "cpp", projectScripts);
+		for (const auto& projectScript : projectScripts)
+		{
+			// Find Documentation of Scripts
+			String docPath = projectScript->get_path().replace(projectScript->get_path().get_extension(), "xml");
+			if (FileAccess::file_exists(docPath))
+			{
+				// Read Documentation XML Content
+				String docFullPath = ProjectSettings::get_singleton()->globalize_path(docPath);
+				std::string docXMLContent = jenova::ReadStdStringFromFile(AS_STD_STRING(docFullPath));
+				if (docXMLContent.empty())
+				{
+					jenova::Warning("Jenova Documentation Builder", "Unable to Read Documentation for C++ Script %s", AS_C_STRING(projectScript->get_path()));
+					continue;
+				}
+
+				// Add Script Documentation to Engine
+				jenova::RegisterDocumentationFromByteArray(docXMLContent.data(), docXMLContent.size());
+			}
+		}
+
+		// All Good
+		return true;
 	}
 	#pragma endregion
 	

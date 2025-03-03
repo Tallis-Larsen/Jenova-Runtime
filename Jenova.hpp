@@ -20,11 +20,11 @@
 #define APP_COMPANYNAME					"MemarDesign™ LLC."
 #define APP_DESCRIPTION					"Real-Time C++ Scripting System for Godot Game Engine, Developed By Hamid.Memar."
 #define APP_COPYRIGHT					"Copyright MemarDesign™ LLC. (©) 2024-2025, All Rights Reserved."
-#define APP_VERSION						"0.3.6.8"
+#define APP_VERSION						"0.3.6.9"
 #define APP_VERSION_MIDDLEFIX			" "
 #define APP_VERSION_POSTFIX				"Beta"
 #define APP_VERSION_SINGLECHAR			"a"
-#define APP_VERSION_DATA				0, 3, 6, 8
+#define APP_VERSION_DATA				0, 3, 6, 9
 #define APP_VERSION_BUILD				"0"
 #define APP_VERSION_NAME				"Dragon"
 
@@ -219,6 +219,9 @@
 #include <classes/script_language_extension.hpp>
 #include <classes/confirmation_dialog.hpp>
 #include <classes/worker_thread_pool.hpp>
+#include <classes/syntax_highlighter.hpp>
+#include <classes/editor_syntax_highlighter.hpp>
+#include <classes/code_highlighter.hpp>
 
 // Godot SDK :: Templates
 #include <templates/hash_map.hpp>
@@ -448,6 +451,7 @@ namespace jenova
 		ClearCacheDatabase,
 		GenerateEncryptionKey,
 		BackupCurrentEncryptionKey,
+		ReloadScriptDocumentation,
 		OpenAddonExplorer,
 		OpenScriptManager,
 		OpenPackageManager,
@@ -932,6 +936,7 @@ namespace jenova
 	bool ReleaseTemporaryModuleCache();
 	std::string GetVisualStudioInstancesMetadata(std::string arguments);
 	std::string GetRuntimeCompilerName();
+	bool UpdateScriptsDocumentation();
 	#pragma endregion
 
 	// Crash Handlers

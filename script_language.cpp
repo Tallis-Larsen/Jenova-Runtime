@@ -156,7 +156,7 @@ bool CPPScriptLanguage::_supports_builtin_mode() const
 }
 bool CPPScriptLanguage::_supports_documentation() const
 {
-	return false; // Not Supprted Yet
+	return true;
 }
 bool CPPScriptLanguage::_can_inherit_from_file() const
 {

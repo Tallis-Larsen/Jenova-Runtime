@@ -111,7 +111,13 @@ Error CPPScript::_reload(bool p_keep_state)
 }
 TypedArray<Dictionary> CPPScript::_get_documentation() const
 {
-	return TypedArray<Dictionary>();  // Not Supported Yet
+	/* 
+		Due to the bad mechanisim for Script Documentation in Godot
+		This function is just used to trigger Documentation Reload,
+		Instead of parsing sources we use a XML beside each Script.
+	*/
+	jenova::UpdateScriptsDocumentation();
+	return TypedArray<Dictionary>();
 }
 String CPPScript::_get_class_icon_path() const
 {
