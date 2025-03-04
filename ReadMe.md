@@ -15,7 +15,7 @@ This repository contains source code of **Jenova Runtime** developed for Godot 4
 
 ## Overview
 
-**Projekt J.E.N.O.V.A** is a comprehensive series of extension libraries for the Godot 4 Game Engine that brings fully-featured C++ scripting directly into the Godot Editor. It allows the use of modern C++20 standards within the Godot Engine, similar to GDScript. 
+**Projekt J.E.N.O.V.A** is a comprehensive series of extension libraries for the Godot 4 Game Engine that brings fully-featured C++ scripting directly into the Godot Editor. It allows the use of modern C++20 standards within the Godot Engine similar to GDScript. 
 
 By using Jenova Framework you can easily program your entire game or application in C/C++ without any issues. You can also integrate OpenCV, CUDA, Vulkan, OpenMP and any other modern C++ features seamlessly, All supported by the powerful backend.
 
@@ -53,7 +53,7 @@ Jenova Core has following dependencies :
 > - In **FileWatch.hpp** change `_callback(file.first, file.second);` to `_callback(_path + "/" + file.first, file.second);`
 > - By using Jenova Builder, All the dependencies are downloaded, manipulated and compiled automatically.
 
-## Build System
+## Build Systems
 ### Windows x64
 
 Building fully-featured Jenova Runtime for Windows x64 requires Visual Studio 2022 with C++20 Support.
@@ -109,6 +109,18 @@ python3 ./Jenova.Builder.py --compiler linux-gcc --skip-banner
 ```
 
 Jenova Runtime source code is fully compatible with both Clang++ (18+) and G++ (13+). Additionally, [Visual Studio Code](https://code.visualstudio.com/) compatibility files are provided.
+
+### Builder Prerequisites
+
+Before using **Jenova Builder** you need to install following prerequisites on both Windows and Linux.
+- Python (3.10+)
+- CMake (3.20+)
+- Ninja (1.11+)
+
+Additionally, the following Python packages are required for Builder :
+```sh
+pip install requests py7zr colored
+```
 
 ## Open Source vs Proprietary
 While the public source code of Jenova is ~90% identical to the proprietary version, a few specific features have been removed or disabled.
