@@ -585,65 +585,65 @@ namespace jenova
 		if (bridge == nullptr) return nullptr;
 
 		// Solve Helpers Utilities Functions
-		if (std::string(sdkFunctionName) == "IsEditor") return &sdk::IsEditor;
-		if (std::string(sdkFunctionName) == "IsGame") return &sdk::IsGame;
-		if (std::string(sdkFunctionName) == "GetEngineMode") return &sdk::GetEngineMode;
-		if (std::string(sdkFunctionName) == "GetNodeByPath") return &sdk::GetNodeByPath;
-		if (std::string(sdkFunctionName) == "FindNodeByName") return &sdk::FindNodeByName;
-		if (std::string(sdkFunctionName) == "GetNodeUniqueID") return &sdk::GetNodeUniqueID;
-		if (std::string(sdkFunctionName) == "GetTree") return &sdk::GetTree;
-		if (std::string(sdkFunctionName) == "GetTime") return &sdk::GetTime;
-		if (std::string(sdkFunctionName) == "Alert") return &sdk::Alert;
-		if (std::string(sdkFunctionName) == "FormatA") return (godot::String(*)(StringPtr, ...))(sdk::Format);
-		if (std::string(sdkFunctionName) == "FormatW") return (godot::String(*)(WideStringPtr, ...))(sdk::Format);
-		if (std::string(sdkFunctionName) == "OutputA") return (void(*)(StringPtr, ...))(sdk::Output);
-		if (std::string(sdkFunctionName) == "OutputW") return (void(*)(WideStringPtr, ...))(sdk::Output);
-		if (std::string(sdkFunctionName) == "DebugOutputA") return (void(*)(StringPtr, ...))(sdk::DebugOutput);
-		if (std::string(sdkFunctionName) == "DebugOutputW") return (void(*)(WideStringPtr, ...))(sdk::DebugOutput);
-		if (std::string(sdkFunctionName) == "GetCStr") return &sdk::GetCStr;
-		if (std::string(sdkFunctionName) == "GetWCStr") return &sdk::GetWCStr;
-		if (std::string(sdkFunctionName) == "SetClassIcon") return &sdk::SetClassIcon;
-		if (std::string(sdkFunctionName) == "MatchScaleFactor") return &sdk::MatchScaleFactor;
-		if (std::string(sdkFunctionName) == "CreateSignalCallback") return &sdk::CreateSignalCallback;
-		if (std::string(sdkFunctionName) == "CreateDirectoryMonitor") return &sdk::CreateDirectoryMonitor;
-		if (std::string(sdkFunctionName) == "CreateFileMonitor") return &sdk::CreateFileMonitor;
-		if (std::string(sdkFunctionName) == "RegisterFileMonitorCallback") return &sdk::RegisterFileMonitorCallback;
-		if (std::string(sdkFunctionName) == "UnregisterFileMonitorCallback") return &sdk::UnregisterFileMonitorCallback;
-		if (std::string(sdkFunctionName) == "ReloadJenovaRuntime") return &sdk::ReloadJenovaRuntime;
-		if (std::string(sdkFunctionName) == "CreateCheckpoint") return &sdk::CreateCheckpoint;
-		if (std::string(sdkFunctionName) == "GetCheckpointTime") return &sdk::GetCheckpointTime;
-		if (std::string(sdkFunctionName) == "DeleteCheckpoint") return &sdk::DeleteCheckpoint;
-		if (std::string(sdkFunctionName) == "GetCheckpointTimeAndDispose") return &sdk::GetCheckpointTimeAndDispose;
-		if (std::string(sdkFunctionName) == "RegisterRuntimeCallback") return &sdk::RegisterRuntimeCallback;
-		if (std::string(sdkFunctionName) == "UnregisterRuntimeCallback") return &sdk::UnregisterRuntimeCallback;
+		if (string(sdkFunctionName) == "IsEditor") return FunctionPtr(&IsEditor);
+		if (string(sdkFunctionName) == "IsGame") return FunctionPtr(&IsGame);
+		if (string(sdkFunctionName) == "GetEngineMode") return FunctionPtr(&GetEngineMode);
+		if (string(sdkFunctionName) == "GetNodeByPath") return FunctionPtr(&GetNodeByPath);
+		if (string(sdkFunctionName) == "FindNodeByName") return FunctionPtr(&FindNodeByName);
+		if (string(sdkFunctionName) == "GetNodeUniqueID") return FunctionPtr(&GetNodeUniqueID);
+		if (string(sdkFunctionName) == "GetTree") return FunctionPtr(&GetTree);
+		if (string(sdkFunctionName) == "GetTime") return FunctionPtr(&GetTime);
+		if (string(sdkFunctionName) == "Alert") return FunctionPtr(&Alert);
+		if (string(sdkFunctionName) == "FormatA") return FunctionPtr((godot::String(*)(StringPtr, ...))(Format));
+		if (string(sdkFunctionName) == "FormatW") return FunctionPtr((godot::String(*)(WideStringPtr, ...))(Format));
+		if (string(sdkFunctionName) == "OutputA") return FunctionPtr((void(*)(StringPtr, ...))(Output));
+		if (string(sdkFunctionName) == "OutputW") return FunctionPtr((void(*)(WideStringPtr, ...))(Output));
+		if (string(sdkFunctionName) == "DebugOutputA") return FunctionPtr((void(*)(StringPtr, ...))(DebugOutput));
+		if (string(sdkFunctionName) == "DebugOutputW") return FunctionPtr((void(*)(WideStringPtr, ...))(DebugOutput));
+		if (string(sdkFunctionName) == "GetCStr") return FunctionPtr(&GetCStr);
+		if (string(sdkFunctionName) == "GetWCStr") return FunctionPtr(&GetWCStr);
+		if (string(sdkFunctionName) == "SetClassIcon") return FunctionPtr(&SetClassIcon);
+		if (string(sdkFunctionName) == "MatchScaleFactor") return FunctionPtr(&MatchScaleFactor);
+		if (string(sdkFunctionName) == "CreateSignalCallback") return FunctionPtr(&CreateSignalCallback);
+		if (string(sdkFunctionName) == "CreateDirectoryMonitor") return FunctionPtr(&CreateDirectoryMonitor);
+		if (string(sdkFunctionName) == "CreateFileMonitor") return FunctionPtr(&CreateFileMonitor);
+		if (string(sdkFunctionName) == "RegisterFileMonitorCallback") return FunctionPtr(&RegisterFileMonitorCallback);
+		if (string(sdkFunctionName) == "UnregisterFileMonitorCallback") return FunctionPtr(&UnregisterFileMonitorCallback);
+		if (string(sdkFunctionName) == "ReloadJenovaRuntime") return FunctionPtr(&ReloadJenovaRuntime);
+		if (string(sdkFunctionName) == "CreateCheckpoint") return FunctionPtr(&CreateCheckpoint);
+		if (string(sdkFunctionName) == "GetCheckpointTime") return FunctionPtr(&GetCheckpointTime);
+		if (string(sdkFunctionName) == "DeleteCheckpoint") return FunctionPtr(&DeleteCheckpoint);
+		if (string(sdkFunctionName) == "GetCheckpointTimeAndDispose") return FunctionPtr(&GetCheckpointTimeAndDispose);
+		if (string(sdkFunctionName) == "RegisterRuntimeCallback") return FunctionPtr(&RegisterRuntimeCallback);
+		if (string(sdkFunctionName) == "UnregisterRuntimeCallback") return FunctionPtr(&UnregisterRuntimeCallback);
 
 		// Solve Graphic Utilities Functions
-		if (std::string(sdkFunctionName) == "GetGameWindowHandle") return &sdk::GetGameWindowHandle;
-		if (std::string(sdkFunctionName) == "GetRenderingDriverName") return &sdk::GetRenderingDriverName;
-		if (std::string(sdkFunctionName) == "GetRenderingDriverResource") return &sdk::GetRenderingDriverResource;
+		if (string(sdkFunctionName) == "GetGameWindowHandle") return FunctionPtr(&GetGameWindowHandle);
+		if (string(sdkFunctionName) == "GetRenderingDriverName") return FunctionPtr(&GetRenderingDriverName);
+		if (string(sdkFunctionName) == "GetRenderingDriverResource") return FunctionPtr(&GetRenderingDriverResource);
 
 		// Solve Hot-Reloading Utilities (Sakura) Functions
-		if (std::string(sdkFunctionName) == "SupportsReload") return &sdk::sakura::SupportsReload;
-		if (std::string(sdkFunctionName) == "PrepareReload") return &sdk::sakura::PrepareReload;
-		if (std::string(sdkFunctionName) == "FinishReload") return &sdk::sakura::FinishReload;
-		if (std::string(sdkFunctionName) == "Dispose") return &sdk::sakura::Dispose;
+		if (string(sdkFunctionName) == "SupportsReload") return FunctionPtr(&sakura::SupportsReload);
+		if (string(sdkFunctionName) == "PrepareReload") return FunctionPtr(&sakura::PrepareReload);
+		if (string(sdkFunctionName) == "FinishReload") return FunctionPtr(&sakura::FinishReload);
+		if (string(sdkFunctionName) == "Dispose") return FunctionPtr(&sakura::Dispose);
 
 		// Solve Memory Management Utilities (Anzen) Functions
-		if (std::string(sdkFunctionName) == "GetGlobalPointer") return &sdk::GetGlobalPointer;
-		if (std::string(sdkFunctionName) == "SetGlobalPointer") return &sdk::SetGlobalPointer;
-		if (std::string(sdkFunctionName) == "DeleteGlobalPointer") return &sdk::DeleteGlobalPointer;
-		if (std::string(sdkFunctionName) == "AllocateGlobalMemory") return &sdk::AllocateGlobalMemory;
-		if (std::string(sdkFunctionName) == "FreeGlobalMemory") return &sdk::FreeGlobalMemory;
+		if (string(sdkFunctionName) == "GetGlobalPointer") return FunctionPtr(&GetGlobalPointer);
+		if (string(sdkFunctionName) == "SetGlobalPointer") return FunctionPtr(&SetGlobalPointer);
+		if (string(sdkFunctionName) == "DeleteGlobalPointer") return FunctionPtr(&DeleteGlobalPointer);
+		if (string(sdkFunctionName) == "AllocateGlobalMemory") return FunctionPtr(&AllocateGlobalMemory);
+		if (string(sdkFunctionName) == "FreeGlobalMemory") return FunctionPtr(&FreeGlobalMemory);
 
 		// Solve Global Variable Storage Utilities Functions
-		if (std::string(sdkFunctionName) == "GetGlobalVariable") return &sdk::GetGlobalVariable;
-		if (std::string(sdkFunctionName) == "SetGlobalVariable") return &sdk::SetGlobalVariable;
-		if (std::string(sdkFunctionName) == "ClearGlobalVariables") return &sdk::ClearGlobalVariables;
+		if (string(sdkFunctionName) == "GetGlobalVariable") return FunctionPtr(&GetGlobalVariable);
+		if (string(sdkFunctionName) == "SetGlobalVariable") return FunctionPtr(&SetGlobalVariable);
+		if (string(sdkFunctionName) == "ClearGlobalVariables") return FunctionPtr(&ClearGlobalVariables);
 
 		// Solve Task System Utilities Functions
-		if (std::string(sdkFunctionName) == "InitiateTask") return &sdk::InitiateTask;
-		if (std::string(sdkFunctionName) == "IsTaskComplete") return &sdk::IsTaskComplete;
-		if (std::string(sdkFunctionName) == "ClearTask") return &sdk::ClearTask;
+		if (string(sdkFunctionName) == "InitiateTask") return FunctionPtr(&InitiateTask);
+		if (string(sdkFunctionName) == "IsTaskComplete") return FunctionPtr(&IsTaskComplete);
+		if (string(sdkFunctionName) == "ClearTask") return FunctionPtr(&ClearTask);
 
 		// Invalid Function
 		return nullptr;
