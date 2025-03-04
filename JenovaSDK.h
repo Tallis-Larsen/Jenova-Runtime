@@ -240,6 +240,7 @@ namespace jenova::sdk
 
 	// JenovaSDK Interface Management
 	JENOVA_C_API JenovaSDKInterface GetSDKInterface();
+	JENOVA_C_API FunctionPtr GetSDKFunction(StringPtr sdkFunctionName);
 
 	// Helpers Utilities :: Wrappers
 	JENOVA_WRAPPER bool IsEditor()

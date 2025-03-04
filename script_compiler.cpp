@@ -104,7 +104,7 @@ namespace jenova
                 internalDefaultSettings["cpp_conformance_mode"]                 = true;                             /* /permissive vs /permissive- */
                 internalDefaultSettings["cpp_exception_handling"]               = 2;                                /* 1 : /EHsc 2: /EHa */
                 internalDefaultSettings["cpp_use_task_system"]                  = true;                             /* Internal Multiprocessing vs Task System */
-                internalDefaultSettings["cpp_extra_compiler"]                   = "/Ot /Ox /GR /bigobj";            /* Extra Compiler Options Like /Zc:threadSafeInit /Bt /Zc:tlsGuards /d1reportTime */
+                internalDefaultSettings["cpp_extra_compiler"]                   = "/Ot /Ox /GR /bigobj -w";         /* Extra Compiler Options Like /Zc:threadSafeInit /Bt /Zc:tlsGuards /d1reportTime */
                 internalDefaultSettings["cpp_definitions"]                      = "TYPED_METHOD_BIND;HOT_RELOAD_ENABLED;_WINDLL";
 
                 // MSVC Linker Settings
