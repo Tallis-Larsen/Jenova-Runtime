@@ -1,0 +1,14 @@
+{
+  "Addon Name": "Jenova Immediate Mode Graphical User Interface (ImGui)",
+  "Addon Version": "1.0.0",
+  "Addon License": "MIT",
+  "Addon Type": "RuntimeModule",
+  "Addon Arch": "Windows-x64",
+  "Addon Header": "JenovaImGui.h",
+  "Addon Binary": "Jenova.ImGui.x64.dll",
+  "Addon Library": "Jenova.ImGui.x64.lib",
+  "Addon Dependencies": "",
+  "Addon Global": true,
+  "Addon Autoload": true,
+  "Minimum Framework Version": "0.3.5.5"
+}

@@ -5,6 +5,12 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Jenova.Runtime", "JenovaRuntime.vcxproj", "{8546F551-80FE-49B0-ABE2-9C8498C0B34E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Addons", "Addons", "{A7E91C83-0000-4261-96BC-C441CB33F622}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Jenova.ImGui.OpenGL", "Addons\Jenova.ImGui\Jenova.ImGui.OpenGL.vcxproj", "{47DD0FCD-D17A-4F96-896F-14CFADF71A88}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Jenova.ImGui.Vulkan", "Addons\Jenova.ImGui\Jenova.ImGui.Vulkan.vcxproj", "{322AF536-9528-4B5F-8923-556199520967}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|x64 = Release|x64
@@ -12,9 +18,17 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{8546F551-80FE-49B0-ABE2-9C8498C0B34E}.Release|x64.ActiveCfg = Release|x64
 		{8546F551-80FE-49B0-ABE2-9C8498C0B34E}.Release|x64.Build.0 = Release|x64
+		{47DD0FCD-D17A-4F96-896F-14CFADF71A88}.Release|x64.ActiveCfg = Release|x64
+		{47DD0FCD-D17A-4F96-896F-14CFADF71A88}.Release|x64.Build.0 = Release|x64
+		{322AF536-9528-4B5F-8923-556199520967}.Release|x64.ActiveCfg = Release|x64
+		{322AF536-9528-4B5F-8923-556199520967}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{47DD0FCD-D17A-4F96-896F-14CFADF71A88} = {A7E91C83-0000-4261-96BC-C441CB33F622}
+		{322AF536-9528-4B5F-8923-556199520967} = {A7E91C83-0000-4261-96BC-C441CB33F622}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DDB23943-0BC9-4FC9-8328-8BCC64209D9F}
