@@ -469,9 +469,9 @@ namespace jenova::sdk
 				if (sakura::SupportsReload())
 				{
 					#if GODOT_VERSION_MAJOR == 4 && GODOT_VERSION_MINOR >= 4
-						openedScenes = godot::EditorInterface::get_singleton()->call("get_open_scene_roots");
+						openedScenes = godot::TypedArray<Node>(godot::EditorInterface::get_singleton()->call("get_open_scene_roots"));
 					#else
-						openedScenes = godot::EditorInterface::get_singleton()->call("get_open_scenes_roots");
+						openedScenes = godot::TypedArray<Node>(godot::EditorInterface::get_singleton()->call("get_open_scenes_roots"));
 					#endif
 				}
 				else
