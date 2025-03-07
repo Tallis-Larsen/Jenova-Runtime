@@ -256,133 +256,6 @@ namespace jenova::sdk
 	{
 		return object->connect(signalName, callable_mp(memnew(EventCallback(callbackPtr)), &EventCallback::OnEventCall));
 	}
-
-	// Hot-Reloading Utilities (Sakura)
-	bool JenovaSDK::SupportsReload()
-	{
-		if (IsEditor()) return godot::EditorInterface::get_singleton()->has_method("get_open_scenes_roots");
-		return true;
-	}
-	void JenovaSDK::PrepareReload(const godot::String& className)
-	{
-		// Disable Hot-Reloading In Static SDK
-		#ifdef JENOVA_SDK_STATIC
-			return;
-		#endif
-
-		// Validate
-		if (!godot::ClassDB::class_exists(className)) return;
-	
-		// Validate Scene Tree [Required!]
-		if (!GetTree()) return;
-
-		// Deselect Nodes
-		if (IsEditor()) godot::EditorInterface::get_singleton()->get_selection()->clear();
-
-		// Get Opened Scenes
-		godot::Array openedScenes;
-		if (IsEditor()) openedScenes = godot::EditorInterface::get_singleton()->get_open_scenes_roots();
-		else openedScenes.push_back(GetTree()->get_root());
-		for (size_t i = 0; i < openedScenes.size(); i++)
-		{
-			// Get Scene Root
-			godot::Node* sceneRoot = (godot::Node*)openedScenes[i]._native_ptr();
-
-			// Validate Scene Root
-			if (!sceneRoot) continue;
-
-			// Collect Nodes With Class Name
-			godot::Vector<godot::Node*> classNodes;
-			CollectNodesByClassName(sceneRoot, className, classNodes);
-
-			// Backup Nodes
-			for (const auto& classNode : classNodes)
-			{
-				// Create Node Backup
-				NodeBackup nodebackup;
-				nodebackup.nodeName = classNode->get_name();
-				nodebackup.nodeClass = godot::String(className);
-				nodebackup.sceneRoot = sceneRoot;
-				nodebackup.scenePath = sceneRoot->get_scene_file_path();
-
-				// Duplicate Node to Backup [Due to Issue #81982]
-				godot::Node* classNodeClone = classNode->duplicate();
-
-				// Pack Current Scene
-				nodebackup.nodeBackup = memnew(godot::PackedScene);
-				nodebackup.nodeBackup->pack(classNodeClone);
-				memdelete(classNodeClone); // classNodeClone->queue_free();
-
-				// Replace With Dummy Node
-				nodebackup.dummyNode = memnew(godot::Node);
-				classNode->replace_by(nodebackup.dummyNode, true);
-				memdelete(classNode); // classNode->queue_free();
-
-				// Add to Dummy Nodes
-				nodeBackups.push_back(nodebackup);
-			}
-		}
-	}
-	void JenovaSDK::FinishReload(const godot::String& className)
-	{
-		// Disable Hot-Reloading In Static SDK
-		#ifdef JENOVA_SDK_STATIC
-			return;
-		#endif
-
-		// Validate
-		if (!godot::ClassDB::class_exists(className)) return;
-
-		// Create Class Name
-		godot::String backupClassName(className);
-
-		// Restore Nodes
-		for (int i = 0; i < nodeBackups.size(); ++i)
-		{
-			// Get Node Backup
-			NodeBackup nodeBackup = nodeBackups[i];
-
-			// Validate Node Class
-			if (nodeBackup.nodeClass != backupClassName) return;
-
-			// Validate Backup Data
-			if (!nodeBackup.sceneRoot) return;
-
-			// Check for Feature
-			if (!IsEditor())
-			{
-				godot::Dictionary versionInfo = godot::Engine::get_singleton()->get_version_info();
-				if (godot::String(versionInfo["build"]) != "jenova")
-				{
-					godot::UtilityFunctions::push_error("[Jenova::Sakura] Runtime Hot-Reloading for GDExtension Classes Only is Supported in Jenova Editions of Godot.");
-					auto* placeholderNode = memnew(godot::Node);
-					nodeBackup.dummyNode->replace_by(placeholderNode, true);
-					memdelete(nodeBackup.dummyNode);
-					memdelete(nodeBackup.nodeBackup);
-					nodeBackups.remove_at(i);
-					--i;
-					continue;
-				}
-			}
-
-			// Restore Nodes From Backup
-			godot::Node* originalNode = nodeBackup.nodeBackup->instantiate(godot::PackedScene::GenEditState::GEN_EDIT_STATE_DISABLED);
-			if (originalNode)
-			{
-				nodeBackup.dummyNode->replace_by(originalNode, true);
-				memdelete(nodeBackup.dummyNode);
-				memdelete(nodeBackup.nodeBackup);
-				nodeBackups.remove_at(i);
-				--i;
-			}
-		}
-	}
-	void JenovaSDK::Dispose(const godot::String& className)
-	{
-		godot::StringName classNameStr(className);
-		if (!godot::ClassDB::class_exists(classNameStr)) return;
-		godot::internal::gdextension_interface_classdb_unregister_extension_class(godot::internal::library, classNameStr._native_ptr());
-	}
 }
 
 // Jenova Runtime SDK
@@ -551,9 +424,180 @@ namespace jenova::sdk
 	{
 		JenovaTaskSystem::ClearTask(taskID);
 	}
+
+	// Hot-Reloading Utilities (Sakura)
+	bool JenovaSDK::SupportsReload()
+	{
+		#if GODOT_VERSION_MAJOR == 4 && GODOT_VERSION_MINOR >= 4
+			if (IsEditor()) return godot::EditorInterface::get_singleton()->has_method("get_open_scene_roots");
+		#else
+			if (IsEditor()) return godot::EditorInterface::get_singleton()->has_method("get_open_scenes_roots");
+		#endif
+		
+		return true;
+	}
+	void JenovaSDK::PrepareReload(const godot::String& className)
+	{
+		// Disable Hot-Reloading In Static SDK
+		#ifdef JENOVA_SDK_STATIC
+			return;
+		#endif
+
+		// Validate
+		if (!godot::ClassDB::class_exists(className)) return;
+	
+		// Validate Scene Tree [Required!]
+		if (!GetTree()) return;
+
+		// Deselect Nodes
+		if (IsEditor()) godot::EditorInterface::get_singleton()->get_selection()->clear();
+
+		// Collect Opened Scenes
+		godot::TypedArray<Node> openedScenes;
+		if (IsEditor()) 
+		{
+			// Validate Hot-Reloading
+			int openedScenesCount = godot::EditorInterface::get_singleton()->get_open_scenes().size();
+			if (openedScenesCount == 1)
+			{
+				// Only One Scene is Open in Editor, Add Active Scene
+				openedScenes.push_back(GetTree()->get_root());
+			}
+			else if (openedScenesCount > 1)
+			{
+				// Multiple Scenes Are Open in Editor, Collect Opened Scenes If Supported
+				if (sakura::SupportsReload())
+				{
+					#if GODOT_VERSION_MAJOR == 4 && GODOT_VERSION_MINOR >= 4
+						openedScenes = godot::EditorInterface::get_singleton()->call("get_open_scene_roots");
+					#else
+						openedScenes = godot::EditorInterface::get_singleton()->call("get_open_scenes_roots");
+					#endif
+				}
+				else
+				{
+					// Warn User About Lack of Multiple Scenes Hot-Reload Capability
+					ShowMessageBox("You are attempting to Hot-Reload multiple opened scenes and "
+						"your engine build does not contain the required feature (ask Godot lazy devs why)\n\n"
+						"To use this feature you need a compatible build, "
+						"If you have any nested nodes in your other opened scene, It will lead to a crash when switching to them.\n\n"
+						"Godot Jenova Edition, Blazium, Lithium IDE and Redot support this feature.\n", "Warning", 0x00000030L);
+
+					// Fallback to Active Scene
+					openedScenes.push_back(GetTree()->get_root());
+				}
+			}
+		}
+		else
+		{
+			// At Runtime/Debug Mode Only One Scene is Opened
+			openedScenes.push_back(GetTree()->get_root());
+		}
+
+		// Process Nested Node Instances From Scenes
+		for (size_t i = 0; i < openedScenes.size(); i++)
+		{
+			// Get Scene Root
+			godot::Node* sceneRoot = (godot::Node*)openedScenes[i]._native_ptr();
+
+			// Validate Scene Root
+			if (!sceneRoot) continue;
+
+			// Collect Nodes With Class Name
+			godot::Vector<godot::Node*> classNodes;
+			CollectNodesByClassName(sceneRoot, className, classNodes);
+
+			// Backup Nodes
+			for (const auto& classNode : classNodes)
+			{
+				// Create Node Backup
+				NodeBackup nodebackup;
+				nodebackup.nodeName = classNode->get_name();
+				nodebackup.nodeClass = godot::String(className);
+				nodebackup.sceneRoot = sceneRoot;
+				nodebackup.scenePath = sceneRoot->get_scene_file_path();
+
+				// Duplicate Node to Backup [Due to Issue #81982]
+				godot::Node* classNodeClone = classNode->duplicate();
+
+				// Pack Current Scene
+				nodebackup.nodeBackup = memnew(godot::PackedScene);
+				nodebackup.nodeBackup->pack(classNodeClone);
+				memdelete(classNodeClone); // classNodeClone->queue_free();
+
+				// Replace With Dummy Node
+				nodebackup.dummyNode = memnew(godot::Node);
+				classNode->replace_by(nodebackup.dummyNode, true);
+				memdelete(classNode); // classNode->queue_free();
+
+				// Add to Dummy Nodes
+				nodeBackups.push_back(nodebackup);
+			}
+		}
+	}
+	void JenovaSDK::FinishReload(const godot::String& className)
+	{
+		// Disable Hot-Reloading In Static SDK
+		#ifdef JENOVA_SDK_STATIC
+			return;
+		#endif
+
+		// Validate
+		if (!godot::ClassDB::class_exists(className)) return;
+
+		// Create Class Name
+		godot::String backupClassName(className);
+
+		// Restore Nodes
+		for (int i = 0; i < nodeBackups.size(); ++i)
+		{
+			// Get Node Backup
+			NodeBackup nodeBackup = nodeBackups[i];
+
+			// Validate Node Class
+			if (nodeBackup.nodeClass != backupClassName) return;
+
+			// Validate Backup Data
+			if (!nodeBackup.sceneRoot) return;
+
+			// Check for Feature
+			if (!IsEditor())
+			{
+				godot::Dictionary versionInfo = godot::Engine::get_singleton()->get_version_info();
+				if (godot::String(versionInfo["build"]) != "jenova")
+				{
+					godot::UtilityFunctions::push_error("[Jenova::Sakura] Runtime Hot-Reloading for GDExtension Classes Only is Supported in Jenova Editions of Godot.");
+					auto* placeholderNode = memnew(godot::Node);
+					nodeBackup.dummyNode->replace_by(placeholderNode, true);
+					memdelete(nodeBackup.dummyNode);
+					memdelete(nodeBackup.nodeBackup);
+					nodeBackups.remove_at(i);
+					--i;
+					continue;
+				}
+			}
+
+			// Restore Nodes From Backup
+			godot::Node* originalNode = nodeBackup.nodeBackup->instantiate(godot::PackedScene::GenEditState::GEN_EDIT_STATE_DISABLED);
+			if (originalNode)
+			{
+				nodeBackup.dummyNode->replace_by(originalNode, true);
+				memdelete(nodeBackup.dummyNode);
+				memdelete(nodeBackup.nodeBackup);
+				nodeBackups.remove_at(i);
+				--i;
+			}
+		}
+	}
+	void JenovaSDK::Dispose(const godot::String& className)
+	{
+		godot::StringName classNameStr(className);
+		if (!godot::ClassDB::class_exists(classNameStr)) return;
+		godot::internal::gdextension_interface_classdb_unregister_extension_class(godot::internal::library, classNameStr._native_ptr());
+	}
 }
 
-// SDK Management
+// Jenova SDK Management
 namespace jenova
 {
 	// JenovaSDK Interface Singleton

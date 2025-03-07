@@ -95,7 +95,6 @@ namespace jenova
 		// Forward Declarations
 		class JenovaEditorPlugin;
 		class JenovaExportPlugin;
-		class JenovaImportPlugin;
 		class JenovaDebuggerPlugin;
 
 		// Global Instances
@@ -152,7 +151,6 @@ namespace jenova
 			// Internal Objects
 			bool isEditorPluginInitialized = false;
 			Ref<JenovaExportPlugin> exportPlugin;
-			Ref<JenovaImportPlugin> importPlugin;
 			Ref<JenovaDebuggerPlugin> debuggerPlugin;
 			jenova::ModuleList scriptModules;
 			jenova::IJenovaCompiler* jenovaCompiler = nullptr;
@@ -223,9 +221,6 @@ namespace jenova
 				// Register Export Plugins
 				VALIDATE_FUNCTION(RegisterExportPlugins());
 
-				// Register Import Plugins
-				VALIDATE_FUNCTION(RegisterImportPlugins());
-
 				// Register Debugger Plugins
 				VALIDATE_FUNCTION(RegisterDebuggerPlugins());
 
@@ -270,10 +265,7 @@ namespace jenova
 				// Unregister Export Plugins
 				VALIDATE_FUNCTION(UnRegisterExportPlugins());
 
-				// Unregister Import Plugins
-				VALIDATE_FUNCTION(UnRegisterImportPlugins());
-
-				// Unregister Import Plugins
+				// Unregister Debugger Plugins
 				VALIDATE_FUNCTION(UnRegisterDebuggerPlugins());
 
 				// Unregister Editor Terminal Panel
@@ -430,24 +422,6 @@ namespace jenova
 				// Remove Export Plugin to Editor
 				this->remove_export_plugin(exportPlugin);
 				exportPlugin.unref();
-
-				// All Good
-				return true;
-			}
-			bool RegisterImportPlugins()
-			{
-				// Add Import Plugin to Editor
-				// importPlugin.instantiate();
-				// this->add_import_plugin(importPlugin);
-
-				// All Good
-				return true;
-			}
-			bool UnRegisterImportPlugins()
-			{
-				// Remove Import Plugin to Editor
-				// this->remove_import_plugin(importPlugin);
-				// importPlugin.unref();
 
 				// All Good
 				return true;
@@ -1118,10 +1092,6 @@ namespace jenova
 			{
 				return exportPlugin;
 			}
-			Ref<JenovaImportPlugin> GetImportPluginInstance()
-			{
-				return importPlugin;
-			}
 			Ref<JenovaDebuggerPlugin> GetDebuggerPluginInstance()
 			{
 				return debuggerPlugin;
@@ -1239,7 +1209,7 @@ namespace jenova
 					jenova::Error("Jenova Main Menu", "Feature Not Implemented Yet");
 					break;
 				case jenova::EditorMenuID::AboutJenova:
-					OpenAboutJenovaProject();
+					OpenAboutProjektJenova();
 					break;
 				default:
 					break;
@@ -3424,7 +3394,7 @@ namespace jenova
 			}
 
 			// Misc Windows
-			void OpenAboutJenovaProject()
+			void OpenAboutProjektJenova()
 			{
 				// Get Scale Factor
 				double scaleFactor = EditorInterface::get_singleton()->get_editor_scale();
@@ -3500,7 +3470,11 @@ namespace jenova
 					"For More Information Visit Official Website:\n"
 				);
 				description->set_autowrap_mode(TextServer::AUTOWRAP_WORD);
-				description->add_theme_font_size_override("font_size", SCALED(16));
+				#if GODOT_VERSION_MAJOR == 4 && GODOT_VERSION_MINOR >= 4
+					description->add_theme_font_size_override("font_size", SCALED(15));
+				#else
+					description->add_theme_font_size_override("font_size", SCALED(16));
+				#endif
 				jenova_about_ui->add_child(description);
 
 				// Add Version Label
@@ -3845,92 +3819,6 @@ namespace jenova
 				}
 			}
 		};
-		class JenovaImportPlugin : public EditorImportPlugin
-		{
-			GDCLASS(JenovaImportPlugin, EditorImportPlugin);
-
-		private:
-			String JenovaImportPluginName = "JenovaGodotCPPImportPlugin";
-			String JenovaImportVisibleName = "Jenova C++ Script";
-
-		private:
-			static void _bind_methods() {}
-
-		public:
-			String _get_importer_name() const override { return JenovaImportPluginName; }
-			String _get_visible_name() const override { return JenovaImportVisibleName; }
-			int32_t _get_preset_count() const override
-			{
-				return 1;
-			}
-			String _get_preset_name(int32_t preset_index = 0) const override
-			{
-				switch (preset_index)
-				{
-				case 0:
-				default:
-					return "Default";
-				}
-			}
-			TypedArray<Dictionary> _get_import_options(const String& p_path, int32_t p_preset_index) const override 
-			{ 
-				Dictionary optCppLanguageStd;
-				optCppLanguageStd["name"] = "c++_language_standard";
-				optCppLanguageStd["usage"] = PROPERTY_USAGE_DEFAULT;
-				optCppLanguageStd["default_value"] = 0;
-				optCppLanguageStd["property_hint"] = PropertyHint::PROPERTY_HINT_ENUM;
-				optCppLanguageStd["hint_string"] = "Default,ISO C++14 Standard,ISO C++17 Standard,ISO C++20 Standard";
-
-				Dictionary optRuntimeMachine;
-				optRuntimeMachine["name"] = "runtime_machine";
-				optRuntimeMachine["usage"] = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_RESTART_IF_CHANGED;
-				optRuntimeMachine["default_value"] = 0;
-				optRuntimeMachine["property_hint"] = PropertyHint::PROPERTY_HINT_ENUM;
-				optRuntimeMachine["hint_string"] = "Jenova VM,Native VM";
-
-				TypedArray<Dictionary> options;
-				options.push_back(optCppLanguageStd);
-				options.push_back(optRuntimeMachine);
-				return options;
-			}
-			PackedStringArray _get_recognized_extensions() const override
-			{
-				PackedStringArray array;
-				array.push_back(jenova::GlobalSettings::JenovaScriptExtension);
-				return array;
-			}
-			String _get_resource_type() const override
-			{
-				return jenova::GlobalSettings::JenovaScriptType;
-			}
-			String _get_save_extension() const override
-			{
-				return jenova::GlobalSettings::JenovaScriptExtension;
-			}
-			double _get_priority() const override
-			{
-				return 1;
-			}
-			int32_t _get_import_order() const override
-			{
-				return IMPORT_ORDER_DEFAULT;
-			}
-			bool _get_option_visibility(const String& path, const StringName& option_name, const Dictionary& options) const override
-			{
-				return true;
-			}
-			godot::Error _import(const String& source_file, const String& save_path, const Dictionary& options, const TypedArray<String>& platform_variants, const TypedArray<String>& gen_files) const
-			{
-				jenova::Output("[Importer] C++ Script File (%s) Imported.", AS_C_STRING(source_file));
-				CPPScript* newCppScript = memnew(CPPScript);
-				newCppScript->_set_source_code(FileAccess::get_file_as_string(source_file));
-				return ResourceSaver::get_singleton()->save(newCppScript, "" + save_path + "." + _get_save_extension(), 0);
-			}
-			bool _can_import_threaded() const override
-			{
-				return false;
-			}
-		};
 		class JenovaDebuggerPlugin : public EditorDebuggerPlugin
 		{
 			GDCLASS(JenovaDebuggerPlugin, EditorDebuggerPlugin);
@@ -4250,7 +4138,7 @@ namespace jenova
 		}
 		static void OnExtensionRelease()
 		{
-			/* Note: This Function Must Update Data Only If They Are Not Already Unset!*/
+			/* Note: This Function Must Release Data Only If They Are Not Already Unset!*/
 
 			// Release SDK Interface
 			if (GlobalStorage::ExtensionInitData.jenovaSDKInterface != nullptr)
@@ -4302,7 +4190,6 @@ namespace jenova
 
 				// Register Editor Sub Plugins (Seems like this is not required in gdmodule)
 				GDREGISTER_INTERNAL_CLASS(JenovaExportPlugin);
-				GDREGISTER_INTERNAL_CLASS(JenovaImportPlugin);
 				GDREGISTER_INTERNAL_CLASS(JenovaDebuggerPlugin);
 
 				// Register Editor Plugins
@@ -4410,7 +4297,7 @@ namespace jenova
 				// Unload Module
 				if (JenovaInterpreter::GetModuleBaseAddress() != 0)
 				{
-					VALIDATE_FUNCTION(JenovaInterpreter::UnloadModule());
+					VALIDATE_FUNCTION(JenovaInterpreter::UnloadModule(ModuleUnloadStage::UnloadModuleToShutdown));
 				}
 
 				// Release Interpreter

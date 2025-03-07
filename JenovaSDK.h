@@ -226,10 +226,6 @@ namespace jenova::sdk
 		// Interface Validator
 		static bool ValidateInterface(void* bridgePtr)
 		{
-			if (!bridgePtr)
-			{
-				printf("Holy Fuck It's null!\n");
-			}
 			if (!bridgePtr) return false;
 			return true;
 		}

@@ -103,7 +103,7 @@ bool JenovaPackageManager::OpenPackageManager(const String& packageDatabaseURL)
 	currentWindow->set_title("Package Manager");
 	currentWindow->set_name("PackageManagerWindow");
 	currentWindow->set_size(Vector2i(SCALED(950), SCALED(600)));
-	currentWindow->set_min_size(Vector2i(950, 600));
+	currentWindow->set_min_size(Vector2i(SCALED(950), SCALED(600)));
 	currentWindow->set_flag(Window::Flags::FLAG_POPUP, true);
 
 	// Show Window [Must Be Here]

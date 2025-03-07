@@ -64,9 +64,6 @@ bool JenovaInterpreter::InitializeInterpreter()
     // Initialize Memory Module Loader
     if (!JenovaLoader::Initialize()) return false;
 
-    // Initialize Mutex
-    interpreterMutex.instantiate();
-
     // All Good
     isInitialized = true;
     return true;
@@ -77,14 +74,15 @@ bool JenovaInterpreter::IsInterpreterInitialized()
 }
 bool JenovaInterpreter::ReleaseInterpreter()
 {
+    return true;
+    // Doesn't Require Clean Up In Debug Mode
+    if (executeInDebugMode) return true;
+
     // It's Not Initialized
     if (!isInitialized) return false;
 
     // Initialize Memory Module Loader
     if (!JenovaLoader::Release()) return false;
-
-    // Release Mutex
-    interpreterMutex.unref();
 
     // All Good
     return true;
@@ -173,7 +171,7 @@ bool JenovaInterpreter::ReloadModule(const uint8_t* moduleDataPtr, const size_t 
     if (executeInDebugMode) return false;
 
     // Unload Module
-    if (!UnloadModule()) return false;
+    if (!UnloadModule(jenova::ModuleUnloadStage::UnloadModuleToReload)) return false;
 
     // Load Module
     return LoadModule(moduleDataPtr, moduleSize, metaData);
@@ -182,7 +180,7 @@ bool JenovaInterpreter::ReloadModule(const jenova::BuildResult& buildResult)
 {
     return ReloadModule(buildResult.builtModuleData.data(), buildResult.builtModuleData.size(), buildResult.moduleMetaData);
 }
-bool JenovaInterpreter::UnloadModule()
+bool JenovaInterpreter::UnloadModule(const jenova::ModuleUnloadStage& unloadStage)
 {
     // Adjust Agressive Mode [Disable For All For Now]
     JenovaLoader::SetAgressiveMode(!(QUERY_ENGINE_MODE(Editor) || QUERY_ENGINE_MODE(Debug) || QUERY_ENGINE_MODE(Runtime)));
@@ -202,6 +200,9 @@ bool JenovaInterpreter::UnloadModule()
 
     // If Debug Mode is Activated Unload Module Loaded From Disk
     if (executeInDebugMode) return jenova::ReleaseTemporaryModuleCache();
+
+    // If Unload Stage is at Shutdown Leave Unloading to the OS
+    if (unloadStage == jenova::ModuleUnloadStage::UnloadModuleToShutdown) return true;
 
     // Unload Module
 	if (!moduleHandle) return false;

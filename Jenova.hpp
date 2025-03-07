@@ -20,11 +20,11 @@
 #define APP_COMPANYNAME					"MemarDesign™ LLC."
 #define APP_DESCRIPTION					"Real-Time C++ Scripting System for Godot Game Engine, Developed By Hamid.Memar."
 #define APP_COPYRIGHT					"Copyright MemarDesign™ LLC. (©) 2024-2025, All Rights Reserved."
-#define APP_VERSION						"0.3.6.9"
+#define APP_VERSION						"0.3.7.0"
 #define APP_VERSION_MIDDLEFIX			" "
 #define APP_VERSION_POSTFIX				"Beta"
 #define APP_VERSION_SINGLECHAR			"a"
-#define APP_VERSION_DATA				0, 3, 6, 9
+#define APP_VERSION_DATA				0, 3, 7, 0
 #define APP_VERSION_BUILD				"0"
 #define APP_VERSION_NAME				"Dragon"
 
@@ -116,6 +116,7 @@
 #include <gdextension_interface.h>
 #include <godot.hpp>
 #include <core/defs.hpp>
+#include <core/version.hpp>
 #include <core/class_db.hpp>
 #include <core/object.hpp>
 #include <core/type_info.hpp>
@@ -368,6 +369,12 @@ namespace jenova
 		LoadModuleAtRuntimeStart,
 		LoadModuleAtInitialization,
 		LoadModuleManually
+	};
+	enum class ModuleUnloadStage
+	{
+		UnloadModuleToReload,
+		UnloadModuleToShutdown,
+		UnloadModuleManually
 	};
 	enum class ImageCreationFormat
 	{
@@ -735,6 +742,7 @@ namespace jenova
 		constexpr char* ScriptSignalCallbackIdentifier			= "JENOVA_CALLBACK";
 		constexpr char* ScriptPropertyIdentifier				= "JENOVA_PROPERTY";
 		constexpr char* ScriptClassNameIdentifier				= "JENOVA_CLASS_NAME";
+		constexpr char* ScriptFunctionExportIdentifier			= "JENOVA_EXPORT";
 		constexpr char* DefaultModuleDatabaseFile				= "JenovaRuntime.jdb";
 		constexpr char* DefaultModuleConfigFile					= "JenovaRuntime.cfg";
 		constexpr char* DefaultJenovaBootPath					= "res://J.E.N.O.V.A/";

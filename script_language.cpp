@@ -69,7 +69,8 @@ PackedStringArray CPPScriptLanguage::_get_reserved_words() const
 		jenova::GlobalSettings::ScriptVMEndIdentifier,
 		jenova::GlobalSettings::ScriptSignalCallbackIdentifier,
 		jenova::GlobalSettings::ScriptPropertyIdentifier,
-		jenova::GlobalSettings::ScriptClassNameIdentifier
+		jenova::GlobalSettings::ScriptClassNameIdentifier,
+		jenova::GlobalSettings::ScriptFunctionExportIdentifier
 	};
 	return reserved_words;
 }
@@ -85,7 +86,8 @@ bool CPPScriptLanguage::_is_control_flow_keyword(const String& p_keyword) const
 		jenova::GlobalSettings::ScriptVMEndIdentifier,
 		jenova::GlobalSettings::ScriptSignalCallbackIdentifier,
 		jenova::GlobalSettings::ScriptPropertyIdentifier,
-		jenova::GlobalSettings::ScriptClassNameIdentifier
+		jenova::GlobalSettings::ScriptClassNameIdentifier,
+		jenova::GlobalSettings::ScriptFunctionExportIdentifier
 	};
 	return control_flow_keywords.find(p_keyword.utf8().get_data()) != control_flow_keywords.end();
 }
@@ -180,11 +182,18 @@ bool CPPScriptLanguage::_overrides_external_editor()
 }
 Dictionary CPPScriptLanguage::_complete_code(const String& p_code, const String& p_path, Object* p_owner) const
 {
-	return Dictionary();
+	Dictionary completeCodeResult;
+	completeCodeResult["result"] = Variant(false);
+	completeCodeResult["force"] = Variant(false);
+	completeCodeResult["call_hint"] = Variant(false);
+	return completeCodeResult;
 }
 Dictionary CPPScriptLanguage::_lookup_code(const String& p_code, const String& p_symbol, const String& p_path, Object* p_owner) const
 {
-	return Dictionary();
+	Dictionary lookUpResult;
+	lookUpResult["result"] = Variant(false);
+	lookUpResult["type"] = GDEXTENSION_VARIANT_TYPE_NIL;
+	return lookUpResult;
 }
 String CPPScriptLanguage::_auto_indent_code(const String& p_code, int32_t p_from_line, int32_t p_to_line) const
 {

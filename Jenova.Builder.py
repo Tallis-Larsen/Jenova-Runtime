@@ -27,7 +27,8 @@ flags = [
     "NDEBUG",
     "JENOVA_RUNTIME",
     "JENOVA_SDK_BUILD",
-    "TYPED_METHOD_BIND"
+    "TYPED_METHOD_BIND",
+    # "LITHIUM_EDITION" -> Use for Building Lithium Edition
 ]
 directories = [
     "Libs",
@@ -58,6 +59,7 @@ sources = [
 ]
 
 # Global Options
+deps_version        = "4.3"
 skip_deps           = False
 skip_cache          = False
 skip_packaging      = False
@@ -207,7 +209,7 @@ def install_dependencies():
     if os.path.exists("./Dependencies"): return
 
     # Dependencies Package URL
-    dependencies_pkg_url = "https://jenova-framework.github.io/download/development/Jenova-Runtime-Dependencies-Universal.jnvpkg"
+    dependencies_pkg_url = f"https://jenova-framework.github.io/download/development/Jenova-Runtime-Dependencies-Universal-{deps_version}.jnvpkg"
     
     # Downloading Dependencies Package
     rgb_print("#367fff", "[ ^ ] Downloading Dependencies Package...")
@@ -444,6 +446,7 @@ def build_dependencies_linux(buildMode, cacheDir):
             "-B", buildPath,
             "-G", "Ninja",
             "-DCMAKE_BUILD_TYPE=MinSizeRel",
+            "-DGODOT_ENABLE_HOT_RELOAD=ON",
             "-DBUILD_SHARED_LIBS=OFF"
         ], check=True)
         build_with_ninja(buildPath)
@@ -840,6 +843,7 @@ def build_dependencies_windows(buildMode, cacheDir):
                 "-B", buildPath,
                 "-G", "Ninja",
                 "-DCMAKE_BUILD_TYPE=MinSizeRel",
+                "-DGODOT_ENABLE_HOT_RELOAD=ON",
                 "-DBUILD_SHARED_LIBS=OFF",
                 "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded",
                 f"-DCMAKE_CXX_FLAGS={os.environ['CLFLAGS']}"
@@ -1019,6 +1023,7 @@ def build_dependencies_windows(buildMode, cacheDir):
                 "-B", buildPath,
                 "-G", "Ninja",
                 "-DCMAKE_BUILD_TYPE=MinSizeRel",
+                "-DGODOT_ENABLE_HOT_RELOAD=ON",
                 "-DBUILD_SHARED_LIBS=OFF"
             ], check=True)
             build_with_ninja(buildPath)
@@ -1339,7 +1344,8 @@ if __name__ == "__main__":
     # Create Arguments Parser
     parser = argparse.ArgumentParser(description="Jenova Runtime Build System 2.3 Developed by Hamid.Memar")
     parser.add_argument('--compiler', type=str, help='Specify Compiler to Use.')
-    parser.add_argument('--deploy-mode', action='store_true', help='Run As GitHub Action Deploy Mode')  
+    parser.add_argument('--deploy-mode', action='store_true', help='Run As GitHub Action Deploy Mode')
+    parser.add_argument('--deps-version', default="4.3", help='Specify Dependencies Version (default: 4.3)')
     parser.add_argument('--skip-banner', action='store_true', help='Skip Printing Banner')
     parser.add_argument('--skip-deps', action='store_true', help='Skip Building Dependencies')
     parser.add_argument('--skip-cache', action='store_true', help='Skip Source Caching')
@@ -1353,6 +1359,9 @@ if __name__ == "__main__":
 
     # Print Banner
     if not args.skip_banner: print_banner()
+
+    # Set Dependencies Version
+    deps_version = args.deps_version
 
     # Enable Deploy Mode
     if args.deploy_mode: deploy_mode = True

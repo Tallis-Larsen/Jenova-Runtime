@@ -29,7 +29,7 @@ public:
     static bool LoadModule(const jenova::BuildResult& buildResult);
     static bool ReloadModule(const uint8_t* moduleDataPtr, const size_t moduleSize, const jenova::SerializedData& metaData);
     static bool ReloadModule(const jenova::BuildResult& buildResult);
-    static bool UnloadModule();
+    static bool UnloadModule(const jenova::ModuleUnloadStage& unloadStage);
     static bool LoadDebugSymbol(const std::string symbolFilePath);
     static intptr_t GetModuleBaseAddress();
     static jenova::FunctionList GetFunctionsList(const std::string& scriptUID);
@@ -72,7 +72,6 @@ private:
     static inline jenova::ModuleAddress         moduleBaseAddress       = 0;
     static inline nlohmann::json                moduleMetaData          = "{}";
     static inline size_t                        moduleBinarySize        = 0;
-    static inline Ref<Mutex>                    interpreterMutex        = nullptr;
     static inline bool                          hasDebugInformation     = false;
     static inline bool                          executeInDebugMode      = false;
     static inline std::string                   moduleDiskPath          = "";
