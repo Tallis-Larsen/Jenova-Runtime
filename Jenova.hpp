@@ -78,6 +78,7 @@
 #include <Windows.h>
 #include <DbgHelp.h>
 #include <psapi.h>
+#include <security.h>
 #endif
 
 // Linux SDK
@@ -85,10 +86,13 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
+#include <sys/types.h>
 #include <utime.h>
 #include <fcntl.h>
 #include <dlfcn.h>
 #include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
 #include <limits.h>
 #include <link.h>
 #include <cxxabi.h>
