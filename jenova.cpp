@@ -4865,6 +4865,15 @@ namespace jenova
 		if (memoryPtr) free(memoryPtr);
 		return false;
 	}
+	const char* CloneString(const char* str)
+	{
+		// Bad Approach, Needs Improvement
+		#if defined(_WIN32) || defined(_WIN64)
+			return _strdup(str);
+		#else
+			return strdup(str);
+		#endif
+	}
 	int GetEnvironmentEntity(const char* entityName, char* bufferPtr, size_t bufferSize)
 	{
 		// Windows Implementation

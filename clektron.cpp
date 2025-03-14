@@ -28,6 +28,7 @@
 #include <TinyCC/libtcc.h>
 
 // Macros
+#define UnreferenceParameter(P) (void)(P)
 #define AddSymbol(symbol) tcc_add_symbol(tcc, #symbol, reinterpret_cast<const void*>(&ClektronSystem::API_##symbol))
 
 // Stroage Units
@@ -73,9 +74,9 @@ extern "C" namespace ClektronSystem
         va_start(args, fmt);
         vsnprintf(buffer, sizeof(buffer), fmt, args);
         va_end(args);
-        return _strdup(buffer);
+        return jenova::CloneString(buffer);
     }
-    BOOL HasAdministratorAccess()
+    bool HasAdministratorAccess()
     {
         // Windows Implementation
         #ifdef TARGET_PLATFORM_WINDOWS
@@ -140,8 +141,8 @@ extern "C" namespace ClektronSystem
     size_t OnDownloadProgress(void* metaDataPtr, size_t downloadTotal, size_t downloadNow, size_t uploadTotal, size_t uploadNow)
     {
         // Unreference Unused Parameters
-        UNREFERENCED_PARAMETER(uploadTotal);
-        UNREFERENCED_PARAMETER(uploadNow);
+        UnreferenceParameter(uploadTotal);
+        UnreferenceParameter(uploadNow);
 
         // Update Download Progress
         if (downloadTotal > 0)
@@ -232,7 +233,7 @@ extern "C" namespace ClektronSystem
         {
             std::string content((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
             inFile.close();
-            return _strdup(content.c_str());
+            return jenova::CloneString(content.c_str());
         }
         else
         {
@@ -434,7 +435,7 @@ extern "C" namespace ClektronSystem
     }
     Buffer API_ZeroMemory(Buffer bufferPtr, Size bufferSize)
     {
-        return SecureZeroMemory(bufferPtr, bufferSize);
+        return memset(bufferPtr, 0, bufferSize);
     }
     Size API_CompareMemory(Buffer bufferA, Buffer bufferB, Size compareSize)
     {
@@ -677,13 +678,7 @@ extern "C" namespace ClektronSystem
         va_start(args, fmt);
         vsnprintf(buffer, sizeof(buffer), fmt, args);
         va_end(args);
-
-        // Bad Approach, Needs Improvement
-		#if defined(_WIN32) || defined(_WIN64)
-			return _strdup(buffer);
-		#else
-			return strdup(buffer);
-		#endif
+        return jenova::CloneString(buffer);
     }
     int API_System(CString command)
     {
@@ -691,7 +686,7 @@ extern "C" namespace ClektronSystem
     }
     CString API_GetFileMD5Hash(CString filePath)
     {
-        return _strdup(AS_C_STRING(jenova::GenerateMD5HashFromFile(godot::String(filePath))));
+        return jenova::CloneString(AS_C_STRING(jenova::GenerateMD5HashFromFile(godot::String(filePath))));
     }
     OperatingSystem API_GetOperatingSystem()
     {
@@ -731,7 +726,7 @@ extern "C" namespace ClektronSystem
         std::string stringA(strA);
         std::string stringB(strB);
         std::string combinedCString = stringA + stringB;
-        return _strdup(combinedCString.c_str());
+        return jenova::CloneString(combinedCString.c_str());
     }
     bool API_CompareStrings(CString strA, CString strB)
     {
