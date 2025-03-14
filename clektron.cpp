@@ -75,110 +75,58 @@ extern "C" namespace ClektronSystem
         va_end(args);
         return _strdup(buffer);
     }
-    static BOOL IsCurrentUserLocalAdministrator()
+    static BOOL HasAdministratorAccess()
     {
-        BOOL   fReturn = FALSE;
-        DWORD  dwStatus = 0;
-        DWORD  dwAccessMask = 0;
-        DWORD  dwAccessDesired = 0;
-        DWORD  dwACLSize = 0;
-        DWORD  dwStructureSize = sizeof(PRIVILEGE_SET);
-        PACL   pACL = NULL;
-        PSID   psidAdmin = NULL;
+        // Windows Implementation
+        #ifdef TARGET_PLATFORM_WINDOWS
+            SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
+            PSID administratorsGroup = NULL;
+            BOOL isAdmin = FALSE;
+            if (!AllocateAndInitializeSid(&ntAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, 
+                DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &administratorsGroup)) return false;
+            if (!CheckTokenMembership(NULL, administratorsGroup, &isAdmin)) isAdmin = FALSE;
+            if (administratorsGroup) FreeSid(administratorsGroup);
+            return isAdmin != FALSE;
 
-        HANDLE hToken = NULL;
-        HANDLE hImpersonationToken = NULL;
+        #endif
 
-        PRIVILEGE_SET   ps = { 0 };
-        GENERIC_MAPPING GenericMapping = { 0 };
+        // Linux Implementation
+        #ifdef TARGET_PLATFORM_LINUX
 
-        PSECURITY_DESCRIPTOR     psdAdmin = NULL;
-        SID_IDENTIFIER_AUTHORITY SystemSidAuthority = SECURITY_NT_AUTHORITY;
-
-        const DWORD ACCESS_READ = 1;
-        const DWORD ACCESS_WRITE = 2;
-
-        __try
-        {
-            if (!OpenThreadToken(GetCurrentThread(), TOKEN_DUPLICATE | TOKEN_QUERY, TRUE, &hToken))
+            if (geteuid() == 0) return true;
+            struct passwd* userInfo = getpwuid(geteuid());
+            if (!userInfo) return false;
+            int groupCount = 0;
+            getgrouplist(userInfo->pw_name, userInfo->pw_uid, NULL, &groupCount);
+            if (groupCount <= 0) return false;
+            gid_t* groups = (gid_t*)malloc(groupCount * sizeof(gid_t));
+            if (!groups) return false;
+            if (getgrouplist(userInfo->pw_name, userInfo->pw_uid, groups, &groupCount) == -1)
             {
-                if (GetLastError() != ERROR_NO_TOKEN)
-                    __leave;
-
-                if (!OpenProcessToken(GetCurrentProcess(),
-                    TOKEN_DUPLICATE | TOKEN_QUERY, &hToken))
-                    __leave;
+                free(groups);
+                return false;
             }
-
-            if (!DuplicateToken(hToken, SecurityImpersonation, &hImpersonationToken))
-                __leave;
-
-            if (!AllocateAndInitializeSid(&SystemSidAuthority, 2,
-                SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
-                0, 0, 0, 0, 0, 0, &psidAdmin))
-                __leave;
-
-            psdAdmin = LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
-            if (psdAdmin == NULL)
-                __leave;
-
-            if (!InitializeSecurityDescriptor(psdAdmin, SECURITY_DESCRIPTOR_REVISION))
-                __leave;
-
-            dwACLSize = sizeof(ACL) + sizeof(ACCESS_ALLOWED_ACE) +
-                GetLengthSid(psidAdmin) - sizeof(DWORD);
-
-            pACL = (PACL)LocalAlloc(LPTR, dwACLSize);
-            if (pACL == NULL)
-                __leave;
-
-            if (!InitializeAcl(pACL, dwACLSize, ACL_REVISION2))
-                __leave;
-
-            dwAccessMask = ACCESS_READ | ACCESS_WRITE;
-
-            if (!AddAccessAllowedAce(pACL, ACL_REVISION2, dwAccessMask, psidAdmin))
-                __leave;
-
-            if (!SetSecurityDescriptorDacl(psdAdmin, TRUE, pACL, FALSE))
-                __leave;
-
-            SetSecurityDescriptorGroup(psdAdmin, psidAdmin, FALSE);
-            SetSecurityDescriptorOwner(psdAdmin, psidAdmin, FALSE);
-
-            if (!IsValidSecurityDescriptor(psdAdmin))
-                __leave;
-
-            dwAccessDesired = ACCESS_READ;
-
-            GenericMapping.GenericRead = ACCESS_READ;
-            GenericMapping.GenericWrite = ACCESS_WRITE;
-            GenericMapping.GenericExecute = 0;
-            GenericMapping.GenericAll = ACCESS_READ | ACCESS_WRITE;
-
-            if (!AccessCheck(psdAdmin, hImpersonationToken, dwAccessDesired,
-                &GenericMapping, &ps, &dwStructureSize, &dwStatus,
-                &fReturn))
+            for (int i = 0; i < groupCount; ++i)
             {
-                fReturn = FALSE;
-                __leave;
+                struct group* grp = getgrgid(groups[i]);
+                if (grp)
+                {
+                    if (strcmp(grp->gr_name, "sudo") == 0 ||
+                        strcmp(grp->gr_name, "admin") == 0 ||
+                        strcmp(grp->gr_name, "wheel") == 0)
+                    {
+                        free(groups);
+                        return true;
+                    }
+                }
             }
-        }
-        __finally
-        {
-            if (pACL)
-                LocalFree(pACL);
-            if (psdAdmin)
-                LocalFree(psdAdmin);
-            if (psidAdmin)
-                FreeSid(psidAdmin);
-            if (hImpersonationToken)
-                CloseHandle(hImpersonationToken);
-            if (hToken)
-                CloseHandle(hToken);
-        }
+            free(groups);
+            return false;
 
-        return fReturn;
+        #endif
+
+        // Platform not supported
+        return false;
     }
 
     // Callbacks
@@ -251,7 +199,7 @@ extern "C" namespace ClektronSystem
     }
     static void API_Exit(int exitCode)
     {
-        quick_exit(exitCode);
+        jenova::ExitWithCode(exitCode);
     }
 
     // File Manager API
@@ -750,19 +698,19 @@ extern "C" namespace ClektronSystem
     }
     static bool API_HasAdministratorAccess()
     {
-        return IsCurrentUserLocalAdministrator();
+        return HasAdministratorAccess();
     }
     static Instance API_LoadModule(CString modulePath)
     {
-        return LoadLibraryA(modulePath);
+        return jenova::LoadModule(modulePath);
     }
     static FunctionPtr API_GetModuleFunction(Instance moduleInstance, CString functionName)
     {
-        return GetProcAddress(HMODULE(moduleInstance), functionName);
+        return jenova::GetModuleFunction(moduleInstance, functionName);
     }
     static bool API_FreeModule(Instance moduleInstance)
     {
-        return FreeLibrary(HMODULE(moduleInstance));
+        return jenova::ReleaseModule(moduleInstance);
     }
     static CString API_CombineStrings(CString strA, CString strB)
     {
