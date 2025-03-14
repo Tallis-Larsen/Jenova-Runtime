@@ -34,7 +34,13 @@ void JenovaScriptManager::_bind_methods()
 }
 void JenovaScriptManager::init()
 {
+	// Initialize Singleton
 	scriptManager = memnew(JenovaScriptManager);
+}
+void JenovaScriptManager::deinit()
+{
+	// Release Singleton
+	if (scriptManager) memdelete(scriptManager);
 }
 JenovaScriptManager* JenovaScriptManager::get_singleton()
 {

@@ -73,7 +73,7 @@ xcopy ".\Jenova.Runtime.gdextension" "$(BuildPath)" /Y
 xcopy "$(TargetDir)$(TargetName).lib" "$(BuildPath)JenovaSDK" /Y
 if exist "$(BuildPath)JenovaSDK\Jenova.SDK.x64.lib" del "$(BuildPath)JenovaSDK\Jenova.SDK.x64.lib"
 ren "$(BuildPath)JenovaSDK\$(TargetName).lib" "Jenova.SDK.x64.lib"
-rundll32.exe "$(TargetPath)",Deploy --command increment-build-number /in:"$(SolutionDir)jenova.hpp"</Command>
+:: rundll32.exe "$(TargetPath)",Deploy --command increment-build-number /in:"$(SolutionDir)jenova.hpp"</Command>
     </PostBuildEvent>
     <ResourceCompile>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-c65001 %(AdditionalOptions)</AdditionalOptions>
@@ -81,6 +81,7 @@ rundll32.exe "$(TargetPath)",Deploy --command increment-build-number /in:"$(Solu
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="asset_monitor.cpp" />
+    <ClCompile Include="clektron.cpp" />
     <ClCompile Include="gdextension_exporter.cpp" />
     <ClCompile Include="jenova.cpp" />
     <ClCompile Include="jenovaSDK.cpp" />
@@ -100,6 +101,7 @@ rundll32.exe "$(TargetPath)",Deploy --command increment-build-number /in:"$(Solu
   <ItemGroup>
     <ClInclude Include="AboutImage.h" />
     <ClInclude Include="asset_monitor.h" />
+    <ClInclude Include="clektron.h" />
     <ClInclude Include="ExtensionHosts.h" />
     <ClInclude Include="gdextension_exporter.h" />
     <ClInclude Include="InternalModules.h" />

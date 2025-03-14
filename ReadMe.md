@@ -1,6 +1,6 @@
 # Projekt J.E.N.O.V.A :: Jenova Runtime (Core)
 
-This repository contains source code of **Jenova Runtime** developed for Godot 4 and It's a part of **[Projekt J.E.N.O.V.A](https://github.com/Jenova-Framework/J.E.N.O.V.A)**
+This repository contains source code of **Jenova Runtime** for Godot 4+ and It's a part of **[Projekt J.E.N.O.V.A](https://github.com/Jenova-Framework/J.E.N.O.V.A)**
 
 ![image](https://github.com/user-attachments/assets/013eed25-7047-407d-aef8-b964203e73b0)
 
@@ -15,14 +15,18 @@ This repository contains source code of **Jenova Runtime** developed for Godot 4
 
 ## Overview
 
-**Projekt J.E.N.O.V.A** is a comprehensive series of extension libraries for the Godot 4 Game Engine that brings fully-featured C++ scripting directly into the Godot Editor. It allows the use of modern C++20 standards within the Godot Engine similar to GDScript. 
+**Projekt J.E.N.O.V.A** is a comprehensive series of extension libraries for the Godot 4+ Game Engine that brings fully-featured C++ scripting directly into the Godot Editor. It allows the use of modern C++20 standards within the Godot Engine similar to GDScript. 
 
 By using Jenova Framework you can easily program your entire game or application in C/C++ without any issues. You can also integrate OpenCV, CUDA, Vulkan, OpenMP and any other modern C++ features seamlessly, All supported by the powerful backend.
 
+Jenova Framework comes with a fully-featured scripting backend offering almost all the features of GDScript that are not available in any other third-party language at the moment. It’s not just an automated GDExtension; It’s a complete scripting backend with many features.
+
 ### Structure of Projekt J.E.N.O.V.A
-- **Jenova Framework**: The framework contains Jenova Runtime and JenovaSDK.
+
+- **Jenova Framework**: The framework contains Jenova Runtime, Jenova Utilities and Jenova SDK.
 - **Jenova Runtime (Core)**: The heart of the framework, It includes the Jenova Interpreter, Jenova Compiler Interface, Jenova Packer etc.
-- **JenovaSDK**: An optional component of Jenova Runtime, providing helpers and APIs for hot-reloading, global allocation/access, etc.
+- **Jenova Package Manager:** A utility included in Jenova Runtime for installing, removing and managing Jenova packages.
+- **Jenova SDK**: An optional component of Jenova Runtime, providing helpers and APIs for Hot-Reloading, Global Allocation/Access etc.
 
 Full feature list can be found [here](https://github.com/Jenova-Framework/J.E.N.O.V.A#%EF%B8%8F-current-features).
 
@@ -51,17 +55,12 @@ Jenova Core has following dependencies :
 > - Edit **base64.hpp** namespace to `base64`
 > - Only header file `libtcc.h` is required from TinyCC beside static library
 > - In **FileWatch.hpp** change `_callback(file.first, file.second);` to `_callback(_path + "/" + file.first, file.second);`
-> - By using Jenova Builder, All the dependencies are downloaded, manipulated and compiled automatically.
+> - **By using Jenova Builder, All the dependencies are downloaded, manipulated and compiled automatically.**
 
 ## Build Systems
 ### Windows x64
 
-Building fully-featured Jenova Runtime for Windows x64 requires Visual Studio 2022 with C++20 Support.
-
-Proprietary Pre-built Windows x64 binaries can be obtained from [here](https://github.com/Jenova-Framework/J.E.N.O.V.A/releases). (Not Available After v0.3.6.0)
-
-> [!TIP]
-> If you want to use pre-built dependencies to build Jenova Runtime on Windows x64 you may need to build `libVSWhere` and `libTinyCC` libraries yourself as these libraries must match your compiler's exact version. Check the [Windows x64 Workflow](https://github.com/Jenova-Framework/Jenova-Runtime/blob/master/.github/workflows/windows-x64-msvc.yml) for more details.
+Building fully-featured Jenova Runtime for Windows x64 requires Visual Studio 2022 with C++20 Support. 
 
 #### Using GigaChad Toolchain
 
@@ -72,7 +71,7 @@ For Windows, Jenova Framework provides a massive compiler collection including a
 - LLVM Clang (clang/clang++)
 - Minimalist GNU for Windows (gcc/g++)
 
-You can use **Jenova Builder** to build Jenova Runtime for Windows using GigaChad Toolchain. Everything is automated and all dependencies will be compiled by Jenova Builder.
+You can use **Jenova Builder** to build Jenova Runtime for Windows using GigaChad Toolchain. Everything is automated and all dependencies will be compiled by Jenova Builder. The compiled dependencies from Jenova Builder can be used in Visual Studio as well.
 
 ```bash
 # Running Builder
@@ -91,11 +90,13 @@ python3 ./Jenova.Builder.py --compiler win-clang --skip-banner
 python3 ./Jenova.Builder.py --compiler win-gcc --skip-banner
 ```
 
-The toolchain is only 200MB and contains all compiler toolchains All-in-One. You don't need to install anything extra, including Visual Studio.
+The toolchain is only 150MB and contains all compiler toolchains All-in-One. You don't need to install anything extra, including Visual Studio.
+
+> **Note : **Using Jenova Builder with `win-msvc` also compiles a fully-featured Jenova Runtime. It serves as an alternative to Visual Studio 2022 with C++20.
 
 ### Linux x64
 
-Building Jenova Runtime for Linux x64 can be done through Code::Blocks or **Jenova Builder**. To build with Code::Blocks, simply open `Jenova.workspace` and build. To build using Jenova Builder, Install Python 3 and then use the following commands from VSCode or Terminal:
+Building Jenova Runtime for Linux x64 can be done using **Jenova Builder**. To build using Jenova Builder, Install Python 3 and then use the following commands from VSCode or Terminal:
 
 ```bash
 # Running Builder
@@ -109,6 +110,8 @@ python3 ./Jenova.Builder.py --compiler linux-gcc --skip-banner
 ```
 
 Jenova Runtime source code is fully compatible with both Clang++ (18+) and G++ (13+). Additionally, [Visual Studio Code](https://code.visualstudio.com/) compatibility files are provided.
+
+> **Note :** Code::Blocks project files have been deprecated and removed following the significant update to Jenova Builder.
 
 ### Builder Prerequisites
 
@@ -125,7 +128,7 @@ pip install requests py7zr colored
 ## Open Source vs Proprietary
 While the public source code of Jenova is ~90% identical to the proprietary version, a few specific features have been removed or disabled.
 ### These changes include :
-- **Jenova Emulator Connector** is provided in full source code but parts of the integration code for proprietary emulators have been removed. It remains functional if connected to another emulator module.
+- **Jenova Emulator Connector** is removed and will be made available later as an addon in the Package Manager.
 
 - **A.K.I.R.A JIT** is removed from the public source code. This component was responsible for executing obfuscated code using a proprietary highly secured VM.
 
@@ -135,7 +138,7 @@ While the public source code of Jenova is ~90% identical to the proprietary vers
 
 ### Cross-Platform
 
-Jenova Proprietary version includes only Microsoft Visual C++ (MSVC) and Microsoft LLVM Clang (Clang-cl) compilers and is compatible only with Windows. Open-Source version, however, is fully ported to Linux and includes support for MinGW GCC and LLVM on Windows as well as GCC and LLVM Clang on Linux.
+Jenova Proprietary version includes only Microsoft Visual C++ (MSVC) and Microsoft LLVM Clang (Clang-cl) compilers and is compatible only with Windows. Open-Source version, however, is fully ported to Linux and includes support for MSVC, Clang-cl, MinGW GCC and LLVM on Windows as well as GCC and LLVM Clang on Linux.
 
 > [!IMPORTANT]  
 > The Jenova Runtime Proprietary version is no longer available for public access. The last version released was 0.3.6.0 Alpha.

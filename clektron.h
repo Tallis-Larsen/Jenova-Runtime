@@ -16,16 +16,26 @@
 // Jenova SDK
 #include "Jenova.hpp"
 
-// Jenova Tiny Profiler Definition
-class JenovaTinyProfiler
+// Jenova Clektron Script Engine Definition
+class Clektron : public RefCounted
 {
-public:
-    static void CreateCheckpoint(const std::string& checkPointName);
-    static double GetCheckpointTime(const std::string& checkPointName);
-    static void DeleteCheckpoint(const std::string& checkPointName);
-    static double GetCheckpointTimeAndRestart(const std::string& checkPointName);
-    static double GetCheckpointTimeAndDispose(const std::string& checkPointName);
+	GDCLASS(Clektron, RefCounted);
 
-private:
-    inline static std::unordered_map<std::string, std::chrono::high_resolution_clock::time_point> checkpoints;
+protected:
+	static void _bind_methods();
+
+public:
+	static void init();
+	static void deinit();
+	static Clektron* get_singleton();
+
+public:
+	Clektron();
+	~Clektron();
+
+public:
+	bool ExecuteScript(const std::string& ctronScriptContent, bool noEntrypoint = false);
+	bool ExecuteScript(const godot::String& ctronScriptContent, bool noEntrypoint = false);
+	bool ExecuteScriptFromFile(const std::string& ctronScriptFilePath, bool noEntrypoint = false);
+	bool ExecuteScriptFromFile(const godot::String& ctronScriptFilePath, bool noEntrypoint = false);
 };

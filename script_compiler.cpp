@@ -300,7 +300,7 @@ namespace jenova
             compilerArgument += GenerateAdditionalIncludeDirectories(compilerSettings["cpp_extra_include_directories"]);
 
             // Add Packages Headers (Addons, Libraries etc.)
-            for (const auto& addonConfig : jenova::GetInstalledAddones())
+            for (const auto& addonConfig : jenova::GetInstalledAddons())
             {
                 // Check For Addon Type
                 if (addonConfig.Type == "RuntimeModule")
@@ -788,7 +788,7 @@ namespace jenova
             linkerArgument += GenerateAdditionalLibraryDirectories(linkerSettings["cpp_extra_library_directories"]);
 
             // Add Packages Libraries (Addons, Libraries etc.)
-            for (const auto& addonConfig : jenova::GetInstalledAddones())
+            for (const auto& addonConfig : jenova::GetInstalledAddons())
             {
                 // Check For Addon Type
                 if (addonConfig.Type == "RuntimeModule")
@@ -1259,7 +1259,7 @@ namespace jenova
             compilerArgument += GeneratePreprocessDefinitions(compilerSettings["cpp_extra_include_directories"]);
 
             // Add Packages Headers (Addons, Libraries etc.)
-            for (const auto& addonConfig : jenova::GetInstalledAddones())
+            for (const auto& addonConfig : jenova::GetInstalledAddons())
             {
                 // Check For Addon Type
                 if (addonConfig.Type == "RuntimeModule")
@@ -1597,7 +1597,7 @@ namespace jenova
             linkerArgument += GenerateLibraryPaths(linkerSettings["cpp_extra_library_directories"]);
 
             // Add Packages Libraries (Addons, Libraries etc.)
-            for (const auto& addonConfig : jenova::GetInstalledAddones())
+            for (const auto& addonConfig : jenova::GetInstalledAddons())
             {
                 if (addonConfig.Type == "RuntimeModule")
                 { 

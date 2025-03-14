@@ -397,7 +397,7 @@ namespace jenova::sdk
 		}
 	}
 
-	// Global Variable Storage Utilities
+	// Global Variable Storage Utilities (Anzen)
 	godot::Variant JenovaSDK::GetGlobalVariable(VariableID id)
 	{
 		return globalVariables[id];
@@ -560,23 +560,6 @@ namespace jenova::sdk
 			// Validate Backup Data
 			if (!nodeBackup.sceneRoot) return;
 
-			// Check for Feature
-			if (!IsEditor())
-			{
-				godot::Dictionary versionInfo = godot::Engine::get_singleton()->get_version_info();
-				if (godot::String(versionInfo["build"]) != "jenova")
-				{
-					godot::UtilityFunctions::push_error("[Jenova::Sakura] Runtime Hot-Reloading for GDExtension Classes Only is Supported in Jenova Editions of Godot.");
-					auto* placeholderNode = memnew(godot::Node);
-					nodeBackup.dummyNode->replace_by(placeholderNode, true);
-					memdelete(nodeBackup.dummyNode);
-					memdelete(nodeBackup.nodeBackup);
-					nodeBackups.remove_at(i);
-					--i;
-					continue;
-				}
-			}
-
 			// Restore Nodes From Backup
 			godot::Node* originalNode = nodeBackup.nodeBackup->instantiate(godot::PackedScene::GenEditState::GEN_EDIT_STATE_DISABLED);
 			if (originalNode)
@@ -594,6 +577,24 @@ namespace jenova::sdk
 		godot::StringName classNameStr(className);
 		if (!godot::ClassDB::class_exists(classNameStr)) return;
 		godot::internal::gdextension_interface_classdb_unregister_extension_class(godot::internal::library, classNameStr._native_ptr());
+	}
+
+	// C Scripting Utilities (Clektron)
+	bool JenovaSDK::ExecuteScript(StringPtr ctronScript, bool noEntrypoint)
+	{
+		return Clektron::get_singleton()->ExecuteScript(std::string(ctronScript), noEntrypoint);
+	}
+	bool JenovaSDK::ExecuteScriptFromFile(StringPtr ctronScriptFile, bool noEntrypoint)
+	{
+		return Clektron::get_singleton()->ExecuteScriptFromFile(std::string(ctronScriptFile), noEntrypoint);
+	}
+	bool JenovaSDK::ExecuteScript(const godot::String& ctronScript, bool noEntrypoint)
+	{
+		return Clektron::get_singleton()->ExecuteScript(ctronScript, noEntrypoint);
+	}
+	bool JenovaSDK::ExecuteScriptFromFile(const godot::String& ctronScriptFile, bool noEntrypoint)
+	{
+		return Clektron::get_singleton()->ExecuteScriptFromFile(ctronScriptFile, noEntrypoint);
 	}
 }
 
@@ -679,7 +680,7 @@ namespace jenova
 		if (string(sdkFunctionName) == "AllocateGlobalMemory") return FunctionPtr(&AllocateGlobalMemory);
 		if (string(sdkFunctionName) == "FreeGlobalMemory") return FunctionPtr(&FreeGlobalMemory);
 
-		// Solve Global Variable Storage Utilities Functions
+		// Solve Global Variable Storage Utilities (Anzen) Functions
 		if (string(sdkFunctionName) == "GetGlobalVariable") return FunctionPtr(&GetGlobalVariable);
 		if (string(sdkFunctionName) == "SetGlobalVariable") return FunctionPtr(&SetGlobalVariable);
 		if (string(sdkFunctionName) == "ClearGlobalVariables") return FunctionPtr(&ClearGlobalVariables);
@@ -688,6 +689,10 @@ namespace jenova
 		if (string(sdkFunctionName) == "InitiateTask") return FunctionPtr(&InitiateTask);
 		if (string(sdkFunctionName) == "IsTaskComplete") return FunctionPtr(&IsTaskComplete);
 		if (string(sdkFunctionName) == "ClearTask") return FunctionPtr(&ClearTask);
+
+		// Solve C Scripting Utilities (Clektron) Functions
+		if (string(sdkFunctionName) == "ExecuteScript") return FunctionPtr((bool(*)(StringPtr, bool))(&clektron::ExecuteScript));
+		if (string(sdkFunctionName) == "ExecuteScriptFromFile") return FunctionPtr((bool(*)(StringPtr, bool))(&clektron::ExecuteScriptFromFile));
 
 		// Invalid Function
 		return nullptr;

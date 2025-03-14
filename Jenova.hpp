@@ -20,11 +20,11 @@
 #define APP_COMPANYNAME					"MemarDesign™ LLC."
 #define APP_DESCRIPTION					"Real-Time C++ Scripting System for Godot Game Engine, Developed By Hamid.Memar."
 #define APP_COPYRIGHT					"Copyright MemarDesign™ LLC. (©) 2024-2025, All Rights Reserved."
-#define APP_VERSION						"0.3.7.0"
+#define APP_VERSION						"0.3.7.1"
 #define APP_VERSION_MIDDLEFIX			" "
 #define APP_VERSION_POSTFIX				"Beta"
-#define APP_VERSION_SINGLECHAR			"a"
-#define APP_VERSION_DATA				0, 3, 7, 0
+#define APP_VERSION_SINGLECHAR			"b"
+#define APP_VERSION_DATA				0, 3, 7, 1
 #define APP_VERSION_BUILD				"0"
 #define APP_VERSION_NAME				"Dragon"
 
@@ -148,6 +148,11 @@
 #include <classes/config_file.hpp>
 #include <classes/label.hpp>
 #include <classes/rich_text_label.hpp>
+#include <classes/line_edit.hpp>
+#include <classes/text_edit.hpp>
+#include <classes/code_edit.hpp>
+#include <classes/code_highlighter.hpp>
+#include <classes/syntax_highlighter.hpp>
 #include <classes/button.hpp>
 #include <classes/option_button.hpp>
 #include <classes/menu_bar.hpp>
@@ -178,6 +183,9 @@
 #include <classes/box_container.hpp>
 #include <classes/h_box_container.hpp>
 #include <classes/v_box_container.hpp>
+#include <classes/separator.hpp>
+#include <classes/h_separator.hpp>
+#include <classes/v_separator.hpp>
 #include <classes/margin_container.hpp>
 #include <classes/scroll_container.hpp>
 #include <classes/style_box.hpp>
@@ -204,6 +212,7 @@
 #include <classes/dir_access.hpp>
 #include <classes/file_access.hpp>
 #include <classes/file_dialog.hpp>
+#include <classes/editor_file_dialog.hpp>
 #include <classes/hashing_context.hpp>
 #include <classes/texture.hpp>
 #include <classes/texture2d.hpp>
@@ -220,9 +229,6 @@
 #include <classes/script_language_extension.hpp>
 #include <classes/confirmation_dialog.hpp>
 #include <classes/worker_thread_pool.hpp>
-#include <classes/syntax_highlighter.hpp>
-#include <classes/editor_syntax_highlighter.hpp>
-#include <classes/code_highlighter.hpp>
 
 // Godot SDK :: Templates
 #include <templates/hash_map.hpp>
@@ -300,12 +306,16 @@ namespace jenova
 	struct ScriptModule;
 	struct JenovaPackage;
 	struct AddonConfig;
+	struct ToolConfig;
 
 	// Type Definitions
 	typedef void* GenericHandle;
 	typedef void* ModuleHandle;
 	typedef void* WindowHandle;
 	typedef void* FileHandle;
+	typedef intptr_t ModuleAddress;
+	typedef intptr_t FunctionAddress;
+	typedef intptr_t PropertyAddress;
 	typedef String ScriptIdentifier;
 	typedef uint32_t CompilerFeatures;
 	typedef uint32_t LoaderFlags;
@@ -329,12 +339,11 @@ namespace jenova
 	typedef std::vector<size_t> IndexList;
 	typedef std::vector<uint8_t> MemoryBuffer;
 	typedef std::vector<AddonConfig> InstalledAddons;
+	typedef std::vector<ToolConfig> InstalledTools;
 	typedef std::string StringBuffer;
 	typedef std::unordered_map<std::string, void*> PointerStorage;
+	typedef std::unordered_map<ModuleHandle, ToolConfig> LoadedTools;
 	typedef Vector<Ref<Resource>> ResourceCollection;
-	typedef intptr_t ModuleAddress;
-	typedef intptr_t FunctionAddress;
-	typedef intptr_t PropertyAddress;
 	typedef uint64_t LongWord;
 	typedef uint16_t TaskID;
 	typedef std::function<void()> TaskFunction;
@@ -519,6 +528,11 @@ namespace jenova
 		PropertySymbol,
 		UnknownSymbol
 	};
+	enum class CustomPackageInstallerMode
+	{
+		InstallFromPackageFile,
+		InstallFromPackageDirectory
+	};
 
 	// Flags
 	enum CompilerFeature : CompilerFeatures
@@ -534,7 +548,6 @@ namespace jenova
 		LoadInDebugMode					= 0x01 << 0,
 		InitializeProtector				= 0x01 << 1,
 	};
-
 
 	// Structures
 	struct ScriptModule
@@ -673,8 +686,8 @@ namespace jenova
 		String				pkgDate;
 		String				pkgURL;
 		String				pkgDestination;
-		bool				pkgInstallScript;
-		bool				pkgUninstallScript;
+		bool				pkgInstallScript = false;
+		bool				pkgUninstallScript = false;
 
 		// Operators
 		bool operator==(const JenovaPackage& other) const
@@ -701,6 +714,21 @@ namespace jenova
 		// Serialized Data
 		SerializedData Data;
 	};
+	struct ToolConfig
+	{
+		// Parsed Configurations
+		std::string Name;
+		std::string Version;
+		std::string License;
+		std::string Type;
+		std::string Arch;
+		std::string Binary;
+		std::string Dependencies;
+		std::string Path;
+
+		// Serialized Data
+		SerializedData Data;
+	};
 
 	// Global Settings
 	namespace GlobalSettings
@@ -719,6 +747,7 @@ namespace jenova
 		constexpr bool RespectSourceFilesEncoding				= true;
 		constexpr bool RegisterGlobalCrashHandler				= false;
 		constexpr bool CreateDumpOnExecutionCrash				= false;
+		constexpr bool LoadAndUnloadToolPackages				= true;
 		constexpr bool UpdatePropertiesAfterCall				= true;
 		constexpr bool DisableBuildAndRunWhileDebug				= true;
 
@@ -755,6 +784,7 @@ namespace jenova
 		constexpr char* VisualStudioSolutionFile				= "Jenova.Framework.sln";
 		constexpr char* VisualStudioProjectFile					= "Jenova.Module.vcxproj";
 		constexpr char* VisualStudioWatchdogFile				= "Jenova.VisualStudio.jwd";
+		constexpr char* JenovaTemporaryBootScriptFile			= "Jenova.Temporary.Boot.ctron";
 		constexpr char* JenovaPackageDatabaseURL				= "https://raw.githubusercontent.com";
 		constexpr char* JenovaPackageRepositoryPath				= "Jenova/Packages/";
 
@@ -908,9 +938,11 @@ namespace jenova
 	String FormatBytesSize(size_t byteSize);
 	String GenerateMD5HashFromFile(const String& targetFile);
 	jenova::PackageList GetInstalledAddonPackages();
+	jenova::PackageList GetInstalledToolPackages();
 	jenova::PackageList GetInstalledCompilerPackages(const jenova::CompilerModel& compilerModel);
 	jenova::PackageList GetInstalledGodotKitPackages();
-	jenova::InstalledAddons GetInstalledAddones();
+	jenova::InstalledAddons GetInstalledAddons();
+	jenova::InstalledTools GetInstalledTools();
 	String GetInstalledCompilerPathFromPackages(const String& compilerIdentity, const jenova::CompilerModel& compilerModel);
 	String GetInstalledGodotKitPathFromPackages(const String& godotKitIdentity);
 	std::string ResolveVariantValueAsString(const Variant* variantValue, jenova::PointerList& ptrList);
@@ -945,6 +977,12 @@ namespace jenova
 	std::string GetVisualStudioInstancesMetadata(std::string arguments);
 	std::string GetRuntimeCompilerName();
 	bool UpdateScriptsDocumentation();
+	bool LoadToolPackages();
+	bool UnloadToolPackages();
+	jenova::LoadedTools& GetLoadedTools();
+	bool ExecuteLaunchScript();
+	String GetTemporaryLaunchScriptFilePath();
+	bool ExecuteTemporaryLaunchScript();
 	#pragma endregion
 
 	// Crash Handlers
@@ -976,6 +1014,9 @@ namespace jenova
 #include "script_instance.h"
 #include "script_manager.h"
 #include "script_compiler.h"
+
+// Jenova C Script Engine
+#include "clektron.h"
 
 // Jenova Exporters
 #include "gdextension_exporter.h"

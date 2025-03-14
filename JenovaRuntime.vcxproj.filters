@@ -2,30 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="jenova.cpp" />
-    <ClCompile Include="script_compiler.cpp">
-      <Filter>Implementation\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="script_instance.cpp">
-      <Filter>Implementation\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="script_instance_base.cpp">
-      <Filter>Implementation\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="script_interpreter.cpp">
-      <Filter>Implementation\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="script_language.cpp">
-      <Filter>Implementation\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="script_manager.cpp">
-      <Filter>Implementation\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="script_object.cpp">
-      <Filter>Implementation\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="script_resource.cpp">
-      <Filter>Implementation\Engine</Filter>
-    </ClCompile>
     <ClCompile Include="tiny_profiler.cpp">
       <Filter>Implementation\Utilities</Filter>
     </ClCompile>
@@ -35,9 +11,6 @@
     <ClCompile Include="asset_monitor.cpp">
       <Filter>Implementation\Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="script_templates.cpp">
-      <Filter>Implementation\Engine</Filter>
-    </ClCompile>
     <ClCompile Include="package_manager.cpp">
       <Filter>Implementation\Utilities</Filter>
     </ClCompile>
@@ -46,6 +19,36 @@
     </ClCompile>
     <ClCompile Include="gdextension_exporter.cpp">
       <Filter>Implementation\Exporters</Filter>
+    </ClCompile>
+    <ClCompile Include="script_compiler.cpp">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClCompile>
+    <ClCompile Include="script_instance.cpp">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClCompile>
+    <ClCompile Include="script_instance_base.cpp">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClCompile>
+    <ClCompile Include="script_interpreter.cpp">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClCompile>
+    <ClCompile Include="script_language.cpp">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClCompile>
+    <ClCompile Include="script_manager.cpp">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClCompile>
+    <ClCompile Include="script_object.cpp">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClCompile>
+    <ClCompile Include="script_resource.cpp">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClCompile>
+    <ClCompile Include="script_templates.cpp">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClCompile>
+    <ClCompile Include="clektron.cpp">
+      <Filter>Implementation\Engine\Clektron</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -73,32 +76,14 @@
     <Filter Include="Implementation\Exporters">
       <UniqueIdentifier>{41aafcac-862e-4b66-8ce9-9fbc8aba7f0b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Implementation\Engine\C++">
+      <UniqueIdentifier>{4ce67dbc-ae4b-49e7-94ee-b8c09b55edb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Implementation\Engine\Clektron">
+      <UniqueIdentifier>{e8057c48-d73d-4eb7-9483-37a7cf8c82f8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="script_compiler.h">
-      <Filter>Implementation\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="script_instance.h">
-      <Filter>Implementation\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="script_instance_base.h">
-      <Filter>Implementation\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="script_interpreter.h">
-      <Filter>Implementation\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="script_language.h">
-      <Filter>Implementation\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="script_manager.h">
-      <Filter>Implementation\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="script_object.h">
-      <Filter>Implementation\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="script_resource.h">
-      <Filter>Implementation\Engine</Filter>
-    </ClInclude>
     <ClInclude Include="tiny_profiler.h">
       <Filter>Implementation\Utilities</Filter>
     </ClInclude>
@@ -108,9 +93,6 @@
     </ClInclude>
     <ClInclude Include="asset_monitor.h">
       <Filter>Implementation\Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="script_templates.h">
-      <Filter>Implementation\Engine</Filter>
     </ClInclude>
     <ClInclude Include="package_manager.h">
       <Filter>Implementation\Utilities</Filter>
@@ -153,6 +135,36 @@
     </ClInclude>
     <ClInclude Include="InternalModules.h">
       <Filter>Resources\Storage</Filter>
+    </ClInclude>
+    <ClInclude Include="script_compiler.h">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClInclude>
+    <ClInclude Include="script_instance.h">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClInclude>
+    <ClInclude Include="script_instance_base.h">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClInclude>
+    <ClInclude Include="script_interpreter.h">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClInclude>
+    <ClInclude Include="script_language.h">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClInclude>
+    <ClInclude Include="script_manager.h">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClInclude>
+    <ClInclude Include="script_object.h">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClInclude>
+    <ClInclude Include="script_resource.h">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClInclude>
+    <ClInclude Include="script_templates.h">
+      <Filter>Implementation\Engine\C++</Filter>
+    </ClInclude>
+    <ClInclude Include="clektron.h">
+      <Filter>Implementation\Engine\Clektron</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

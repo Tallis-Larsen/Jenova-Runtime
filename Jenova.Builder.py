@@ -51,6 +51,7 @@ sources = [
     "script_language.cpp",
     "script_compiler.cpp",
     "script_manager.cpp",
+    "clektron.cpp",
     "tiny_profiler.cpp",
     "task_system.cpp",
     "package_manager.cpp",

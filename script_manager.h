@@ -44,6 +44,7 @@ public:
 
 public:
     static void init();
+    static void deinit();
     static JenovaScriptManager* get_singleton();
 
 protected:

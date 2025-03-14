@@ -1801,7 +1801,7 @@ namespace jenova
 				}
 
 				// Delete Addon Binaries
-				for (const auto& addonConfig : jenova::GetInstalledAddones())
+				for (const auto& addonConfig : jenova::GetInstalledAddons())
 				{
 					if (addonConfig.Type == "RuntimeModule")
 					{
@@ -2557,8 +2557,9 @@ namespace jenova
 				};
 
 				// Create & Assign Callbacks
-				generate_button->connect("pressed", callable_mp(memnew(VSSelectorEventManager(this, vs_selector_window)), &VSSelectorEventManager::OnGenerateButtonClick));
-				vs_selector_window->connect("close_requested", callable_mp(memnew(VSSelectorEventManager(this, vs_selector_window)), &VSSelectorEventManager::OnWindowClose));
+				auto vsSelectorEventManager = memnew(VSSelectorEventManager(this, vs_selector_window));
+				generate_button->connect("pressed", callable_mp(vsSelectorEventManager, &VSSelectorEventManager::OnGenerateButtonClick));
+				vs_selector_window->connect("close_requested", callable_mp(vsSelectorEventManager, &VSSelectorEventManager::OnWindowClose));
 
 				// Prepare Pop Up Window
 				if (!jenova::AssignPopUpWindow(vs_selector_window))
@@ -2640,7 +2641,7 @@ namespace jenova
 				if (!extraLibraries.empty() && extraLibraries.back() != ';') extraLibraries.push_back(';');
 
 				// Add Packages Include/Linkage (Addons, Libraries etc.)
-				for (const auto& addonConfig : jenova::GetInstalledAddones())
+				for (const auto& addonConfig : jenova::GetInstalledAddons())
 				{
 					// Check For Addon Type
 					if (addonConfig.Type == "RuntimeModule")
@@ -2817,7 +2818,6 @@ namespace jenova
 						OnConfirmedEvent(JenovaEditorPlugin* _plugin) { pluginInstance = _plugin; }
 						void ProcessEvent()
 						{
-							EditorInterface::get_singleton()->stop_playing_scene();
 							pluginInstance->OpenProjectInVisualStudio();
 							memdelete(this);
 						}
@@ -2967,7 +2967,7 @@ namespace jenova
 				if (!extraIncludeDirectories.empty() && extraIncludeDirectories.back() != ';') extraIncludeDirectories.push_back(';');
 
 				// Add Packages Include/Linkage (Addons, Libraries etc.)
-				for (const auto& addonConfig : jenova::GetInstalledAddones())
+				for (const auto& addonConfig : jenova::GetInstalledAddons())
 				{
 					// Check For Addon Type
 					if (addonConfig.Type == "RuntimeModule")
@@ -3072,7 +3072,6 @@ namespace jenova
 							OnConfirmedEvent(JenovaEditorPlugin* _plugin) { pluginInstance = _plugin; }
 							void ProcessEvent()
 							{
-								EditorInterface::get_singleton()->stop_playing_scene();
 								pluginInstance->OpenProjectInVisualStudioCode();
 								memdelete(this);
 							}
@@ -3271,8 +3270,9 @@ namespace jenova
 				};
 
 				// Create & Assign Callbacks
-				configure_button->connect("pressed", callable_mp(memnew(ConfigureBuildEventManager(this, configure_build_window)), &ConfigureBuildEventManager::OnConfigureButtonClick));
-				configure_build_window->connect("close_requested", callable_mp(memnew(ConfigureBuildEventManager(this, configure_build_window)), &ConfigureBuildEventManager::OnWindowClose));
+				auto configureBuildEventManager = memnew(ConfigureBuildEventManager(this, configure_build_window));
+				configure_button->connect("pressed", callable_mp(configureBuildEventManager, &ConfigureBuildEventManager::OnConfigureButtonClick));
+				configure_build_window->connect("close_requested", callable_mp(configureBuildEventManager, &ConfigureBuildEventManager::OnWindowClose));
 
 				// Prepare Pop Up Window
 				if (!jenova::AssignPopUpWindow(configure_build_window))
@@ -3383,8 +3383,9 @@ namespace jenova
 				};
 
 				// Create & Assign Callbacks
-				export_button->connect("pressed", callable_mp(memnew(ModuleExporterEventManager(this, module_exporter_window)), &ModuleExporterEventManager::OnModuleExportButtonClick));
-				module_exporter_window->connect("close_requested", callable_mp(memnew(ModuleExporterEventManager(this, module_exporter_window)), &ModuleExporterEventManager::OnWindowClose));
+				auto moduleExporterEventManager = memnew(ModuleExporterEventManager(this, module_exporter_window));
+				export_button->connect("pressed", callable_mp(moduleExporterEventManager, &ModuleExporterEventManager::OnModuleExportButtonClick));
+				module_exporter_window->connect("close_requested", callable_mp(moduleExporterEventManager, &ModuleExporterEventManager::OnWindowClose));
 
 				// Prepare Pop Up Window
 				if (!jenova::AssignPopUpWindow(module_exporter_window))
@@ -3758,10 +3759,10 @@ namespace jenova
 				if (!std::filesystem::exists(jenovaExportDirectory)) std::filesystem::create_directories(jenovaExportDirectory);
 
 				// Verbose Addon Export
-				if (jenova::GetInstalledAddones().size() != 0) jenova::Output("[color=#729bed][Build][/color] Copying Addons to Build Directory...");
+				if (jenova::GetInstalledAddons().size() != 0) jenova::Output("[color=#729bed][Build][/color] Copying Addons to Build Directory...");
 
 				// Export Addons
-				for (const auto& addonConfig : jenova::GetInstalledAddones())
+				for (const auto& addonConfig : jenova::GetInstalledAddons())
 				{
 					if (addonConfig.Type == "RuntimeModule")
 					{
@@ -4170,6 +4171,14 @@ namespace jenova
 				}
 			}
 		}
+		static void OnEditorBoot()
+		{
+			// Execute Startup Script
+			if (!jenova::ExecuteLaunchScript()) jenova::Warning("Jenova Boot Stage", "Failed to Execute Startup Script.");
+
+			// Execute Temporary Startup Script
+			if (!jenova::ExecuteTemporaryLaunchScript()) jenova::Warning("Jenova Boot Stage", "Failed to Execute Temporary Startup Script.");
+		}
 		static void OnRuntimeStarted()
 		{
 			// Start Runtime
@@ -4188,6 +4197,9 @@ namespace jenova
 				// Initialize Extension
 				OnExtensionInitialize();
 
+				// Rise Editor Boot Callback
+				if (QUERY_ENGINE_MODE(Editor)) OnEditorBoot();
+
 				// Register Editor Sub Plugins (Seems like this is not required in gdmodule)
 				GDREGISTER_INTERNAL_CLASS(JenovaExportPlugin);
 				GDREGISTER_INTERNAL_CLASS(JenovaDebuggerPlugin);
@@ -4205,6 +4217,12 @@ namespace jenova
 				if (QUERY_ENGINE_MODE(Editor))
 				{
 					if (jenova::GlobalSettings::DefaultModuleLoadStage == ModuleLoadStage::LoadModuleAtInitialization) JenovaInterpreter::BootInterpreter();
+				}
+
+				// Load Tool Packages [Editor]
+				if (QUERY_ENGINE_MODE(Editor) && jenova::GlobalSettings::LoadAndUnloadToolPackages)
+				{
+					if (!jenova::LoadToolPackages()) jenova::Warning("Jenova Tool System", "One or More Jenova Tool Module Failed to Initialize.");
 				}
 
 				// Verbose
@@ -4245,6 +4263,9 @@ namespace jenova
 				CPPHeaderResourceSaver::init();
 				JenovaScriptManager::init();
 
+				// Initialize Clektron Engine
+				Clektron::init();
+
 				// Load Module At Initialization [Debug/Runtime]
 				if (QUERY_ENGINE_MODE(Debug) || QUERY_ENGINE_MODE(Runtime))
 				{
@@ -4276,6 +4297,12 @@ namespace jenova
 				JenovaTemplateManager::deinit();
 				JenovaAssetMonitor::deinit();
 
+				// Unload Tool Packages [Editor]
+				if (QUERY_ENGINE_MODE(Editor) && jenova::GlobalSettings::LoadAndUnloadToolPackages)
+				{
+					if (!jenova::UnloadToolPackages()) jenova::Warning("Jenova Tool System", "One or More Jenova Tool Module Failed to Uninitialize.");
+				}
+
 				// Release Extension
 				OnExtensionRelease();
 
@@ -4293,6 +4320,10 @@ namespace jenova
 				CPPScriptResourceSaver::deinit();
 				CPPHeaderResourceLoader::deinit();
 				CPPHeaderResourceSaver::deinit();
+				JenovaScriptManager::deinit();
+
+				// Uninitialize Clektron Engine
+				Clektron::deinit();
 
 				// Unload Module
 				if (JenovaInterpreter::GetModuleBaseAddress() != 0)
@@ -6985,7 +7016,7 @@ namespace jenova
 	}
 	jenova::PackageList GetInstalledAddonPackages()
 	{
-		// Collect Compiler Packages
+		// Collect Addon Packages
 		auto addonPackages = JenovaPackageManager::get_singleton()->GetInstalledPackages(jenova::PackageType::Addon);
 		jenova::PackageList filteredAddonPackages;
 		for (const auto& addonPackage : addonPackages) filteredAddonPackages.push_back(addonPackage);
@@ -6996,6 +7027,20 @@ namespace jenova
 		
 		// Return Package List
 		return filteredAddonPackages;
+	}
+	jenova::PackageList GetInstalledToolPackages()
+	{
+		// Collect Tool Packages
+		auto toolPackages = JenovaPackageManager::get_singleton()->GetInstalledPackages(jenova::PackageType::Tool);
+		jenova::PackageList filteredToolPackages;
+		for (const auto& toolPackage : toolPackages) filteredToolPackages.push_back(toolPackage);
+
+		// Sort Package Collections
+		std::sort(filteredToolPackages.begin(), filteredToolPackages.end(),
+			[](const jenova::JenovaPackage& a, const jenova::JenovaPackage& b) { return a.pkgDestination < b.pkgDestination; });
+
+		// Return Package List
+		return filteredToolPackages;
 	}
 	jenova::PackageList GetInstalledCompilerPackages(const jenova::CompilerModel& compilerModel)
 	{
@@ -7060,7 +7105,7 @@ namespace jenova
 		// Return Package List
 		return godotKitPackages;
 	}
-	jenova::InstalledAddons GetInstalledAddones()
+	jenova::InstalledAddons GetInstalledAddons()
 	{
 		// Create Addon List
 		jenova::InstalledAddons addonList;
@@ -7112,6 +7157,55 @@ namespace jenova
 
 		// Return Addon List
 		return addonList;
+	}
+	jenova::InstalledTools GetInstalledTools()
+	{
+		// Create Tool List
+		jenova::InstalledTools toolList;
+
+		// Collect Installed Tools
+		for (const auto& toolPackage : jenova::GetInstalledToolPackages())
+		{
+			std::string toolConfigFile = AS_STD_STRING(ProjectSettings::get_singleton()->globalize_path(toolPackage.pkgDestination)) + "/Tool-Config.json";
+			if (std::filesystem::exists(toolConfigFile))
+			{
+				jenova::SerializedData toolConfigData = jenova::ReadStdStringFromFile(toolConfigFile);
+				if (!toolConfigData.empty())
+				{
+					try
+					{
+						// Create Tool Config
+						jenova::ToolConfig toolConfig;
+
+						// Parse Tool Config Data
+						nlohmann::json toolConfigParser = nlohmann::json::parse(toolConfigData);
+						toolConfig.Name = toolConfigParser["Tool Name"].get<std::string>();
+						toolConfig.Version = toolConfigParser["Tool Version"].get<std::string>();
+						toolConfig.License = toolConfigParser["Tool License"].get<std::string>();
+						toolConfig.Type = toolConfigParser["Tool Type"].get<std::string>();
+						toolConfig.Arch = toolConfigParser["Tool Arch"].get<std::string>();
+						toolConfig.Binary = toolConfigParser["Tool Binary"].get<std::string>();
+						toolConfig.Dependencies = toolConfigParser["Tool Dependencies"].get<std::string>();
+
+						// Set Config Data
+						toolConfig.Data = toolConfigData;
+
+						// Set Tool Path
+						toolConfig.Path = std::filesystem::absolute(AS_STD_STRING(ProjectSettings::get_singleton()->globalize_path(toolPackage.pkgDestination))).string();
+
+						// Add New Tool Config
+						toolList.push_back(toolConfig);
+					}
+					catch (const std::exception&)
+					{
+						continue;
+					}
+				}
+			}
+		}
+
+		// Return Tool List
+		return toolList;
 	}
 	String GetInstalledCompilerPathFromPackages(const String& compilerIdentity, const jenova::CompilerModel& compilerModel)
 	{
@@ -8481,7 +8575,7 @@ namespace jenova
 	}
 	void CopyAddonBinariesToEngineDirectory(bool createSymbolic)
 	{
-		for (const auto& addonConfig : jenova::GetInstalledAddones())
+		for (const auto& addonConfig : jenova::GetInstalledAddons())
 		{
 			if (addonConfig.Type == "RuntimeModule")
 			{
@@ -8660,7 +8754,7 @@ namespace jenova
 			runtimeConfigurationSerializer["InterpreterSettings"]["RunInDebugNonVirtualMode"] = false;
 
 			// Serialize Addon Modules
-			jenova::InstalledAddons installedAddons = jenova::GetInstalledAddones();
+			jenova::InstalledAddons installedAddons = jenova::GetInstalledAddons();
 			runtimeConfigurationSerializer["AddonsNumber"] = installedAddons.size();
 			runtimeConfigurationSerializer["Addons"] = nlohmann::json::array();
 			for (const auto& installedAddon : installedAddons)
@@ -8904,6 +8998,94 @@ namespace jenova
 		}
 
 		// All Good
+		return true;
+	}
+	bool LoadToolPackages()
+	{
+		// Iterate Over All Installed Tools and Load Them
+		jenova::InstalledTools toolPackages = GetInstalledTools();
+		for (const auto& toolPackage : toolPackages)
+		{
+			// Get Tool Binary Path
+			std::string toolBinaryPath = toolPackage.Path + "/" + toolPackage.Binary;
+
+			// Load Tool Module
+			jenova::ModuleHandle toolModule = jenova::LoadModule(toolBinaryPath.c_str());
+			if (!toolModule)
+			{
+				jenova::Error("Jenova Tool Loader", "Tool Module '%s' Failed to Load.", toolPackage.Binary.c_str());
+				return false;
+			}
+
+			// Locate Tool Initializer
+			if (!jenova::InitializeExtensionModule("InitializeTool", toolModule, jenova::ModuleCallMode::Actual))
+			{
+				jenova::Error("Jenova Tool Loader", "Tool Module '%s' Failed to Initialize.", toolPackage.Binary.c_str());
+				return false;
+			}
+
+			// Add Loaded Module to Loaded Tools
+			jenova::GetLoadedTools().insert(std::make_pair(toolModule, toolPackage));
+		}
+
+		// All Good
+		return true;
+	}
+	bool UnloadToolPackages()
+	{
+		// Iterate Over All Loaded Tools
+		for (const auto& loadedTool : jenova::GetLoadedTools())
+		{
+			if (!jenova::CallModuleEvent("ShutdownTool", loadedTool.first, jenova::ModuleCallMode::Actual))
+			{
+				jenova::Error("Jenova Tool Loader", "Tool Module '%s' Failed to Uninitialize.", loadedTool.second.Binary.c_str());
+			};
+		}
+		jenova::GetLoadedTools().clear();
+		return true;
+	}
+	jenova::LoadedTools& GetLoadedTools()
+	{
+		static jenova::LoadedTools loadedTools;
+		return loadedTools;
+	}
+	bool ExecuteLaunchScript()
+	{
+		// Check if Boot Script Provided, If Yes Execute it.
+		std::string launchScriptPath = AS_STD_STRING(ProjectSettings::get_singleton()->globalize_path("res://Jenova/Jenova.Runtime.Startup.ctron"));
+		if (std::filesystem::exists(launchScriptPath))
+		{
+			// Validate C Script Engine
+			if (!Clektron::get_singleton()) return false;
+
+			// Execute Boot Script
+			if (!Clektron::get_singleton()->ExecuteScriptFromFile(launchScriptPath)) return false;
+		}
+
+		// No Boot Provided, No Need for Execution
+		return true;
+	}
+	String GetTemporaryLaunchScriptFilePath()
+	{
+		return EditorInterface::get_singleton()->get_editor_paths()->get_cache_dir() + "/" + jenova::GlobalSettings::JenovaTemporaryBootScriptFile;
+	}
+	bool ExecuteTemporaryLaunchScript()
+	{
+		// Check if Temporary Script Provided, If Yes Execute it.
+		std::string temporaryLaunchScriptPath = AS_STD_STRING(jenova::GetTemporaryLaunchScriptFilePath());
+		if (std::filesystem::exists(temporaryLaunchScriptPath))
+		{
+			// Validate C Script Engine
+			if (!Clektron::get_singleton()) return false;
+
+			// Execute Temporary Script
+			if (!Clektron::get_singleton()->ExecuteScriptFromFile(temporaryLaunchScriptPath, true)) return false;
+
+			// Delete Temporary Script
+			if (!std::filesystem::remove(temporaryLaunchScriptPath)) return false;
+		}
+
+		// No Temporary Script Provided, No Need for Execution
 		return true;
 	}
 	#pragma endregion

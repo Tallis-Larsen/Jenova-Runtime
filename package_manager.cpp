@@ -34,8 +34,8 @@
 constexpr const char* packageDatabaseFileURL = "/Jenova-Framework/Jenova-Packages/refs/heads/main/Jenova.Package.Database.json";
 
 // Storages
-static jenova::PackageList	onlinePackages;
-static jenova::PackageList	installedPackages;
+static jenova::PackageList onlinePackages;
+static jenova::PackageList installedPackages;
 
 // Singleton Instance
 JenovaPackageManager* jnvpm_singleton = nullptr;
@@ -69,6 +69,7 @@ void JenovaPackageManager::_bind_methods()
     ClassDB::bind_method(D_METHOD("OpenPackageManager"), &JenovaPackageManager::OpenPackageManager);
 	ClassDB::bind_method(D_METHOD("UpdateStatus"), &JenovaPackageManager::UpdateStatus);
 	ClassDB::bind_method(D_METHOD("ForceUpdatePackageList"), &JenovaPackageManager::ForceUpdatePackageList);
+	ClassDB::bind_method(D_METHOD("RequestEditorRestart"), &JenovaPackageManager::RequestEditorRestart);
 }
 
 // Singleton Handling
@@ -148,18 +149,28 @@ bool JenovaPackageManager::OpenPackageManager(const String& packageDatabaseURL)
 	toolbar->set_offset(Side::SIDE_RIGHT, SCALED(-330.0));
 	toolbar->set_offset(Side::SIDE_BOTTOM, SCALED(40.0));
 	toolbar->set_h_grow_direction(Control::GROW_DIRECTION_BOTH);
-	toolbar->add_theme_constant_override("separation", SCALED(10));
+	toolbar->add_theme_constant_override("separation", SCALED(2));
 	currentWindow->add_child(toolbar);
 
 	// Create Toolbar Icons
 	auto githubIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_GITHUB_ICON));
 	auto downloadIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_DOWNLOAD_ICON));
+	auto packageAddIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_PACKAGE_ADD_ICON));
+	auto recycleIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_RECYCLE_ICON));
+	auto editTextIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_EDIT_TEXT_ICON));
+	auto directoryOpenIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_DIRECTORY_OPEN_ICO));
 
 	// Add Toolbar Items
 	Button* open_repository_tool = CreateToolbarItem("OpenRepositoryTool", githubIcon, "Open Packages Database GitHub Repository", toolbar);
 	Button* reload_database_tool = CreateToolbarItem("ReloadDatabaseTool", jenova::GetEditorIcon("PreviewRotate"), "Refresh Online Package Database", toolbar);
-	Button* stop_downloads_tool = CreateToolbarItem("StopDownloadTool", jenova::GetEditorIcon("Stop"), "Stop All Downloads & Tasks", toolbar);
+	CreateToolbarSeparator(toolbar);
+	Button* install_custom_pkg_tool = CreateToolbarItem("InstallCustomPackage", packageAddIcon, "Install Custom Package...", toolbar);
+	Button* remove_unused_pkgs_tool = CreateToolbarItem("RemoveUnusedPackage", recycleIcon, "Remove Unused Packages", toolbar);
+	CreateToolbarSeparator(toolbar);
+	Button* edit_pkg_database_tool = CreateToolbarItem("OpenPackageDatabaseTool", editTextIcon, "Edit Local Package Database File", toolbar);
 	Button* download_pkg_database_tool = CreateToolbarItem("DownloadDatabaseTool", downloadIcon, "Download Package Database", toolbar);
+	CreateToolbarSeparator(toolbar);
+	Button* open_pkgs_directory_tool = CreateToolbarItem("OpenPackagesDirectory", directoryOpenIcon, "Open Installed Packages Directory", toolbar);
 
 	// Add Browser Block
 	Panel* browser_block = memnew(Panel);
@@ -257,6 +268,67 @@ bool JenovaPackageManager::OpenPackageManager(const String& packageDatabaseURL)
 			{
 				pkgManagerInstance->ReloadEntireDatabase();
 			}
+			// Install Custom Package
+			if (toolID == "InstallCustomPackage")
+			{
+				// Prompt User for Opening Visual Studio
+				ConfirmationDialog* dialog = memnew(ConfirmationDialog);
+				dialog->set_title("[ Custom Package Installer ]");
+				dialog->set_text("Which installation method are you willing to use?");
+				dialog->add_button("Install from Package File", false, "InstallFromPackageFile");
+				dialog->add_button("Install from Package Directory", true, "InstallFromPackageDirectory");
+				dialog->get_cancel_button()->set_visible(false);
+				dialog->get_ok_button()->set_visible(false);
+
+				// Define Internal UI Callback
+				class CustomPackageInstallerEvent : public RefCounted
+				{
+				private:
+					JenovaPackageManager* pkgManagerInstance;
+
+				public:
+					CustomPackageInstallerEvent(JenovaPackageManager* _pkgman) { pkgManagerInstance = _pkgman; }
+					void OnButtonClick(const String& actionName)
+					{
+						if (actionName == "InstallFromPackageFile")
+						{
+							pkgManagerInstance->InstallCustomPackage(jenova::CustomPackageInstallerMode::InstallFromPackageFile);
+						}
+						if (actionName == "InstallFromPackageDirectory")
+						{
+							pkgManagerInstance->InstallCustomPackage(jenova::CustomPackageInstallerMode::InstallFromPackageDirectory);
+						}
+						memdelete(this);
+					}
+				};
+
+				// Create & Assign UI Callback to Dialog
+				dialog->connect("custom_action", callable_mp(memnew(CustomPackageInstallerEvent(pkgManagerInstance)), &CustomPackageInstallerEvent::OnButtonClick));
+				dialog->connect("custom_action", callable_mp((Node*)dialog, &ConfirmationDialog::queue_free));
+				dialog->connect("confirmed", callable_mp((Node*)dialog, &ConfirmationDialog::queue_free));
+				dialog->connect("canceled", callable_mp((Node*)dialog, &ConfirmationDialog::queue_free));
+
+				// Add Dialog to Engine & Show
+				window->add_child(dialog);
+				dialog->popup_centered();
+			}
+			// Remove Unused Packages
+			if (toolID == "RemoveUnusedPackages")
+			{
+				pkgManagerInstance->RemoveUnusedPackages();
+			}
+			// Open Local Package Database
+			if (toolID == "OpenPackageDatabase")
+			{
+				String installedPackageFile = jenova::GetJenovaProjectDirectory() + "Jenova/" + jenova::GlobalSettings::JenovaInstalledPackagesFile;
+				jenova::RunFile(AS_C_STRING(installedPackageFile));
+			}
+			// Open Packages Directory
+			if (toolID == "OpenPackagesDirectory")
+			{
+				String localPackagesRepository = jenova::GetJenovaProjectDirectory() + jenova::GlobalSettings::JenovaPackageRepositoryPath;
+				jenova::RunFile(AS_C_STRING(localPackagesRepository));
+			}
 		}
 		void OnTabChanged(int32_t tabIndex)
 		{
@@ -281,9 +353,12 @@ bool JenovaPackageManager::OpenPackageManager(const String& packageDatabaseURL)
 
 	// Create & Assign Tool Button Actions
 	BIND_TOOL_ACTION(open_repository_tool, "OpenRepository");
-	BIND_TOOL_ACTION(download_pkg_database_tool, "DownloadDatabase");
 	BIND_TOOL_ACTION(reload_database_tool, "ReloadDatabase");
-	BIND_TOOL_ACTION(stop_downloads_tool, "StopAllTasks");
+	BIND_TOOL_ACTION(install_custom_pkg_tool, "InstallCustomPackage");
+	BIND_TOOL_ACTION(remove_unused_pkgs_tool, "RemoveUnusedPackages");
+	BIND_TOOL_ACTION(edit_pkg_database_tool, "OpenPackageDatabase");
+	BIND_TOOL_ACTION(download_pkg_database_tool, "DownloadDatabase");
+	BIND_TOOL_ACTION(open_pkgs_directory_tool, "OpenPackagesDirectory");
 
 	// Create Timer
 	taskTimer = memnew(Timer);
@@ -350,6 +425,23 @@ Button* JenovaPackageManager::CreateToolbarItem(const String& toolName, const Re
 
 	// Return New Toolbar Item
 	return toolbar_item;
+}
+VSeparator* JenovaPackageManager::CreateToolbarSeparator(Control* toolbar)
+{
+	// Get Scale Factor
+	double scaleFactor = EditorInterface::get_singleton()->get_editor_scale();
+
+	// Create New Toolbar Separator
+	VSeparator* toolbar_separator = memnew(VSeparator);
+	toolbar_separator->set_v_size_flags(Control::SizeFlags::SIZE_SHRINK_CENTER);
+	toolbar_separator->set_custom_minimum_size(Vector2(1, SCALED(20)));
+	toolbar_separator->add_theme_constant_override("separation", SCALED(2));
+
+	// Add to Toolbar
+	toolbar->add_child(toolbar_separator);
+
+	// Return New Toolbar Separator
+	return toolbar_separator;
 }
 Panel* JenovaPackageManager::CreatePackageItem(const jenova::JenovaPackage& jenovaPackage, const Ref<Theme> itemTheme)
 {
@@ -982,6 +1074,9 @@ bool JenovaPackageManager::InstallPackage(const String& packageHash)
 	// Update Status
 	this->FormatStatus("#2edb76", "Package '%s' Installed.", AS_C_STRING(package.pkgName));
 
+	// Request Restart if Package is Tool
+	if (package.pkgType == jenova::PackageType::Tool) this->call_deferred("RequestEditorRestart");
+
 	// All Good
 	return true;
 }
@@ -1010,7 +1105,7 @@ bool JenovaPackageManager::UninstallPackage(const String& packageHash)
 	}
 
 	// Delete Install Path Directory If Exists
-	if (std::filesystem::exists(installPath))
+	if (std::filesystem::exists(installPath) && package.pkgType != jenova::PackageType::Tool)
 	{
 		if (!std::filesystem::is_empty(installPath))
 		{
@@ -1044,6 +1139,34 @@ bool JenovaPackageManager::UninstallPackage(const String& packageHash)
 		}
 	}
 
+	// If Package is A Tool, Issue a Startup Removal Script
+	if (std::filesystem::exists(installPath) && package.pkgType == jenova::PackageType::Tool)
+	{
+		// Get Temporary Launch Script File
+		std::string tempLaunchScriptFile = AS_STD_STRING(jenova::GetTemporaryLaunchScriptFilePath());
+
+		// Create Install Path for Command
+		std::string cmdInstallPath = jenova::ReplaceAllMatchesWithStringAndReturn(installPath, "\\", "/");
+
+		// Generate Tool Uninstaller Command
+		std::string packageRemovalCommand = jenova::Format("if (!RemoveDirectory(\"%s\")) return false;\n", cmdInstallPath.c_str());
+
+		// Generate Uninstaller Script
+		std::ofstream scriptFileWritter;
+		if (std::filesystem::exists(tempLaunchScriptFile)) scriptFileWritter.open(tempLaunchScriptFile, std::ios::app);
+		else scriptFileWritter.open(tempLaunchScriptFile, std::ios::out);
+		if (scriptFileWritter.is_open())
+		{
+			scriptFileWritter << packageRemovalCommand;
+			scriptFileWritter.close();
+		}
+		else
+		{
+			jenova::Error("Jenova Package Uninstaller", "Unable to Generate Tool Package Uninstaller Script.");
+			return false;
+		}
+	}
+
 	// Update Installed Package Database
 	installedPackages.erase(std::find(installedPackages.begin(), installedPackages.end(), package));
 
@@ -1066,6 +1189,309 @@ bool JenovaPackageManager::UninstallPackage(const String& packageHash)
 
 	// Update Status
 	this->FormatStatus("#2edb76", "Package '%s' Uninstalled.", AS_C_STRING(package.pkgName));
+
+	// Request Restart if Package is Tool
+	if (package.pkgType == jenova::PackageType::Tool) this->call_deferred("RequestEditorRestart");
+
+	// All Good
+	return true;
+}
+bool JenovaPackageManager::InstallCustomPackage(const jenova::CustomPackageInstallerMode& installerMode)
+{
+	// Pick Package Path
+	{
+		// Get Editor Theme
+		Ref<Theme> editorTheme = EditorInterface::get_singleton()->get_editor_theme();
+
+		// Get Scale Factor
+		double scaleFactor = EditorInterface::get_singleton()->get_editor_scale();
+
+		// Create File Dialog Instance
+		EditorFileDialog* file_dialog = memnew(EditorFileDialog);
+		if (installerMode == jenova::CustomPackageInstallerMode::InstallFromPackageFile)
+		{
+			file_dialog->set_file_mode(EditorFileDialog::FILE_MODE_OPEN_FILE);
+			file_dialog->set_access(EditorFileDialog::ACCESS_FILESYSTEM);
+			file_dialog->set_title("Select a Path for Jenova Pacakge File");
+
+			// Add Filters
+			PackedStringArray filters;
+			filters.push_back("*.7z ; Jenova LZMA2 Package");
+			file_dialog->set_filters(filters);
+		}
+		else
+		{
+			file_dialog->set_file_mode(EditorFileDialog::FILE_MODE_OPEN_DIR);
+			file_dialog->set_access(EditorFileDialog::ACCESS_FILESYSTEM);
+			file_dialog->set_title("Select a Path for Jenova Pacakge Directory");
+		}
+		file_dialog->set_size(Vector2i(SCALED(950), SCALED(580)));
+		file_dialog->set_force_native(false);
+
+		// Create Settings Panel
+		VBoxContainer* settingsPanel = memnew(VBoxContainer);
+		file_dialog->add_side_menu(settingsPanel);
+
+		Label* pkgSettingsTitle = memnew(Label);
+		pkgSettingsTitle->set_text("Package Configuration");
+		pkgSettingsTitle->add_theme_color_override("font_color", editorTheme->get_color("accent_color", "Editor"));
+		pkgSettingsTitle->add_theme_font_size_override("font_size", SCALED(20));
+		settingsPanel->add_child(pkgSettingsTitle);
+
+		Label* pkgNameLabel = memnew(Label);
+		pkgNameLabel->set_text("Package Title : ");
+		settingsPanel->add_child(pkgNameLabel);
+
+		LineEdit* pkgNameInput = memnew(LineEdit);
+		pkgNameInput->set_placeholder("Custom Jenova Package");
+		settingsPanel->add_child(pkgNameInput);
+
+		Label* pkgTypeLabel = memnew(Label);
+		pkgTypeLabel->set_text("Package Type : ");
+		settingsPanel->add_child(pkgTypeLabel);
+
+		OptionButton* pkgTypeButton = memnew(OptionButton);
+		pkgTypeButton->add_item("Compiler");
+		pkgTypeButton->add_item("GodotKit");
+		pkgTypeButton->add_item("Library");
+		pkgTypeButton->add_item("SampleProject");
+		pkgTypeButton->add_item("CodeTemplate");
+		pkgTypeButton->add_item("Addon");
+		pkgTypeButton->add_item("Tool");
+		settingsPanel->add_child(pkgTypeButton);
+
+		Label* pkgPlatformLabel = memnew(Label);
+		pkgPlatformLabel->set_text("Package Platform : ");
+		settingsPanel->add_child(pkgPlatformLabel);
+
+		OptionButton* pkgPlatformButton = memnew(OptionButton);
+		pkgPlatformButton->add_item("Windows (x64)");
+		pkgPlatformButton->add_item("Linux (x64)");
+		settingsPanel->add_child(pkgPlatformButton);
+
+		Label* pkgVersionLabel = memnew(Label);
+		pkgVersionLabel->set_text("Package Version : ");
+		settingsPanel->add_child(pkgVersionLabel);
+
+		TextEdit* pkgVersionInput = memnew(TextEdit);
+		pkgVersionInput->set_placeholder("1.0.0 (x64)");
+		pkgVersionInput->set_fit_content_height_enabled(true);
+		settingsPanel->add_child(pkgVersionInput);
+
+		// Define Internal UI Callback Data
+		struct FileDialogEventData
+		{
+			EditorFileDialog* fileDialogInstance = nullptr;
+			JenovaPackageManager* pkgManagerInstance = nullptr;
+			LineEdit* pkgNameInput = nullptr;
+			OptionButton* pkgTypeButton = nullptr;
+			OptionButton* pkgPlatformButton = nullptr;
+			TextEdit* pkgVersionInput = nullptr;
+		};
+
+		// Define Internal UI Callback
+		class FileDialogEvent : public RefCounted
+		{
+		private:
+			FileDialogEventData eventData;
+
+		public:
+			// Constructor
+			FileDialogEvent(FileDialogEventData& _eventData) : eventData(_eventData) {}
+
+			// Events
+			void OnPackageFileSelected(const String& packageFilePath)
+			{
+				// Get Package Configuration Data
+				auto pkgName = eventData.pkgNameInput->get_text();
+				if (pkgName.is_empty()) pkgName = jenova::GenerateMD5HashFromFile(packageFilePath);
+				auto pkgType = jenova::PackageType(eventData.pkgTypeButton->get_selected());
+				auto pkgPlatform = jenova::PackagePlatform(eventData.pkgPlatformButton->get_selected());
+				auto pkgVersion = eventData.pkgVersionInput->get_text();
+				if (pkgVersion.is_empty()) pkgVersion = "0.0.0";
+				auto pkgFilename = packageFilePath.get_basename().get_file();
+
+				// Create Package Destination
+				std::string packageRepositoryPath = AS_STD_STRING(jenova::GetJenovaProjectDirectory() + jenova::GlobalSettings::JenovaPackageRepositoryPath);
+				if (!packageRepositoryPath.empty() && (packageRepositoryPath.back() == '\\' || packageRepositoryPath.back() == '/')) packageRepositoryPath.pop_back();
+				std::string pkgDestination = packageRepositoryPath + "/" + AS_STD_STRING(pkgFilename);
+
+				// Validate If A Package With Same Name Installer
+				if (std::filesystem::exists(pkgDestination))
+				{
+					jenova::Error("Custom Package Installer", "A Package with Same Name Already Exists, Installation Aborted.");
+					ReleaseEverything();
+					return;
+				}
+
+				// Create Destination for Extraction
+				if (!std::filesystem::create_directories(pkgDestination))
+				{
+					jenova::Error("Custom Package Installer", "Cannot Create Custom Package Destination Directory.");
+					ReleaseEverything();
+					return;
+				}
+
+				// Extract Package Content to Destination
+				if (!eventData.pkgManagerInstance->ExtractPackage(packageFilePath, String(pkgDestination.c_str())))
+				{
+					jenova::Error("Custom Package Installer", "Failed to Extract Custom Package File to Destination Directory.");
+					ReleaseEverything();
+					return;
+				}
+
+				// Add Installed Package to Database
+				jenova::JenovaPackage newPackage;
+				newPackage.pkgDestination = ProjectSettings::get_singleton()->localize_path(String(pkgDestination.c_str()));
+				newPackage.pkgHash = jenova::GenerateMD5HashFromFile(packageFilePath);
+				newPackage.pkgName = pkgName;
+				newPackage.pkgPlatform = pkgPlatform;
+				newPackage.pkgType = pkgType;
+				newPackage.pkgVersion = pkgVersion;
+				installedPackages.push_back(newPackage);
+
+				// Cache Installed Package Database
+				if (!eventData.pkgManagerInstance->CacheInstalledPackages())
+				{
+					jenova::Error("Custom Package Installer", "Failed to Cache Installed Packages Database.");
+					ReleaseEverything();
+					return;
+				}
+
+				// Reload Installed Packages
+				if (!eventData.pkgManagerInstance->ObtainInstalledPackages())
+				{
+					jenova::Error("Custom Package Installer", "Failed to Reload Installed Packages Database.");
+					ReleaseEverything();
+					return;
+				}
+
+				// All Good, Update Status & Clean Up
+				eventData.pkgManagerInstance->FormatStatus("#2edb76", "Custom Package '%s' Installed.", AS_C_STRING(packageFilePath.get_file()));
+				ReleaseEverything();
+
+				// Request Restart if Package is Tool
+				if (newPackage.pkgType == jenova::PackageType::Tool) eventData.pkgManagerInstance->call_deferred("RequestEditorRestart");
+			}
+			void OnPackageDirectorySelected(const String& packageDirectory)
+			{
+				// Get Package Configuration Data
+				auto pkgName = eventData.pkgNameInput->get_text();
+				if (pkgName.is_empty()) pkgName = jenova::GenerateStandardUIDFromPath(packageDirectory).md5_text();
+				auto pkgType = jenova::PackageType(eventData.pkgTypeButton->get_selected());
+				auto pkgPlatform = jenova::PackagePlatform(eventData.pkgPlatformButton->get_selected());
+				auto pkgVersion = eventData.pkgVersionInput->get_text();
+				if (pkgVersion.is_empty()) pkgVersion = "0.0.0";
+
+				// Add Installed Package to Database
+				jenova::JenovaPackage newPackage;
+				newPackage.pkgDestination = ProjectSettings::get_singleton()->localize_path(packageDirectory);
+				newPackage.pkgHash = jenova::GenerateStandardUIDFromPath(packageDirectory).md5_text();
+				newPackage.pkgName = pkgName;
+				newPackage.pkgPlatform = pkgPlatform;
+				newPackage.pkgType = pkgType;
+				newPackage.pkgVersion = pkgVersion;
+				installedPackages.push_back(newPackage);
+
+				// Cache Installed Package Database
+				if (!eventData.pkgManagerInstance->CacheInstalledPackages())
+				{
+					jenova::Error("Custom Package Installer", "Failed to Cache Installed Packages Database.");
+					ReleaseEverything();
+					return;
+				}
+
+				// Reload Installed Packages
+				if (!eventData.pkgManagerInstance->ObtainInstalledPackages())
+				{
+					jenova::Error("Custom Package Installer", "Failed to Reload Installed Packages Database.");
+					ReleaseEverything();
+					return;
+				}
+
+				// All Good, Update Status & Clean Up
+				eventData.pkgManagerInstance->FormatStatus("#2edb76", "Custom Package '%s' Installed.", AS_C_STRING(packageDirectory.get_file()));
+				ReleaseEverything();
+
+				// Request Restart if Package is Tool
+				if (newPackage.pkgType == jenova::PackageType::Tool) eventData.pkgManagerInstance->call_deferred("RequestEditorRestart");
+			}
+			void OnDialogClosed()
+			{
+				// Clean Up
+				ReleaseEverything();
+			}
+
+			// Releaser
+			void ReleaseEverything()
+			{
+				eventData.pkgManagerInstance->GetWindow()->call_deferred("show");
+				eventData.fileDialogInstance->queue_free();
+				memdelete(this);
+			}
+		};
+
+		// Create Event Data
+		FileDialogEventData eventData;
+		eventData.fileDialogInstance = file_dialog;
+		eventData.pkgManagerInstance = this;
+		eventData.pkgNameInput = pkgNameInput;
+		eventData.pkgTypeButton = pkgTypeButton;
+		eventData.pkgPlatformButton = pkgPlatformButton;
+		eventData.pkgVersionInput = pkgVersionInput;
+
+		// Connect Signals
+		auto file_dialog_event = memnew(FileDialogEvent(eventData));
+		file_dialog->connect("file_selected", callable_mp(file_dialog_event, &FileDialogEvent::OnPackageFileSelected));
+		file_dialog->connect("dir_selected", callable_mp(file_dialog_event, &FileDialogEvent::OnPackageDirectorySelected));
+		file_dialog->connect("canceled", callable_mp(file_dialog_event, &FileDialogEvent::OnDialogClosed));
+
+		// Display File Picker
+		GetWindow()->hide();
+		GetWindow()->get_parent()->add_child(file_dialog);
+		file_dialog->popup_centered();
+	}
+
+	// Invalid Mode
+	return false;
+}
+bool JenovaPackageManager::RemoveUnusedPackages()
+{
+	// Package Removal Counter
+	int removedPackages = 0;
+
+	// Iterate and Remove Unused Packages
+	for (auto it = installedPackages.begin(); it != installedPackages.end();)
+	{
+		std::string packageInstallationPath = AS_STD_STRING(ProjectSettings::get_singleton()->globalize_path(it->pkgDestination));
+		if (!std::filesystem::exists(packageInstallationPath))
+		{
+			jenova::Output("Non-Existing Package '%s' Removed from Database.", AS_C_STRING(it->pkgDestination));
+			removedPackages++;
+			it = installedPackages.erase(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	// Cache Installed Package Database
+	if (!CacheInstalledPackages())
+	{
+		jenova::Error("Jenova Package Installer", "Failed to Cache Installed Packages Database.");
+		return false;
+	}
+
+	// Reload Installed Packages
+	if (!ObtainInstalledPackages())
+	{
+		jenova::Error("Jenova Package Installer", "Failed to Reload Installed Packages Database.");
+		return false;
+	}
+
+	// Update Status
+	this->FormatStatus("#ababab", "%d Unused Package Successfully Removed from Package Database.", removedPackages);
 
 	// All Good
 	return true;
@@ -1156,6 +1582,42 @@ void JenovaPackageManager::ForceUpdatePackageList()
 {
 	this->UpdatePackageList(jenova::PackageType(currentTabID));
 }
+void JenovaPackageManager::RequestEditorRestart()
+{
+	// Prompt User for Retry
+	ConfirmationDialog* dialog = memnew(ConfirmationDialog);
+	dialog->set_title("[ Restart Required ]");
+	dialog->set_text("You've installed or uninstalled a Package that requires the editor to restart.\nWhat would you like to do?");
+	dialog->get_ok_button()->set_text("Restart Editor");
+	dialog->get_cancel_button()->set_text("I Need to Save My Work");
+
+	// Define Internal UI Callback
+	class OnConfirmedEvent : public RefCounted
+	{
+	private:
+	private:
+		JenovaPackageManager* pkgManagerInstance = nullptr;
+
+	public:
+		OnConfirmedEvent(JenovaPackageManager* _pkgman) : pkgManagerInstance(_pkgman) { }
+
+	public:
+		void ProcessEvent()
+		{
+			EditorInterface::get_singleton()->restart_editor();
+			memdelete(this);
+		}
+	};
+
+	// Create & Assign UI Callback to Dialog
+	dialog->connect("confirmed", callable_mp(memnew(OnConfirmedEvent(this)), &OnConfirmedEvent::ProcessEvent));
+	dialog->connect("confirmed", callable_mp((Node*)dialog, &ConfirmationDialog::queue_free));
+	dialog->connect("canceled", callable_mp((Node*)dialog, &ConfirmationDialog::queue_free));
+
+	// Add Dialog to Engine & Show
+	GetWindow()->add_child(dialog);
+	dialog->popup_centered();
+}
 void JenovaPackageManager::SetBusy(bool busyState, jenova::TaskID taskID)
 {
 	this->isBusy = busyState;
@@ -1171,8 +1633,8 @@ void JenovaPackageManager::SetBusy(bool busyState, jenova::TaskID taskID)
 		jenova::SetWindowState(jenova::GetMainWindowNativeHandle(), true);
 		taskTimer->stop();
 	}
-	if (this->isBusy && this->currentWindow) this->currentWindow->set_disable_input(true);
-	if (!this->isBusy && this->currentWindow) this->currentWindow->set_disable_input(false);
+	if (this->isBusy && GetWindow()) GetWindow()->set_disable_input(true);
+	if (!this->isBusy && GetWindow()) GetWindow()->set_disable_input(false);
 }
 bool JenovaPackageManager::CanClose() const
 {

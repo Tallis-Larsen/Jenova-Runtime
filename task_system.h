@@ -16,8 +16,9 @@
 // Jenova SDK
 #include "Jenova.hpp"
 
-// Jenova Task System Definitions
-class JenovaTaskSystem {
+// Jenova Task System Definition
+class JenovaTaskSystem
+{
 public:
     static jenova::TaskID InitiateTask(jenova::TaskFunction function);
     static bool IsTaskComplete(jenova::TaskID taskID);

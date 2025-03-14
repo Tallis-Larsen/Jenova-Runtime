@@ -213,7 +213,7 @@ namespace jenova::sdk
 		JENOVA_INTERNAL(NativePtr AllocateGlobalMemory(MemoryID id, size_t size));
 		JENOVA_INTERNAL(void FreeGlobalMemory(MemoryID id));
 
-		// Global Variable Storage Utilities
+		// Global Variable Storage Utilities (Anzen)
 		JENOVA_INTERNAL(godot::Variant GetGlobalVariable(VariableID id));
 		JENOVA_INTERNAL(void SetGlobalVariable(VariableID id, godot::Variant var));
 		JENOVA_INTERNAL(void ClearGlobalVariables());
@@ -222,6 +222,12 @@ namespace jenova::sdk
 		JENOVA_INTERNAL(TaskID InitiateTask(TaskFunction function));
 		JENOVA_INTERNAL(bool IsTaskComplete(TaskID taskID));
 		JENOVA_INTERNAL(void ClearTask(TaskID taskID));
+
+		// C Scripting Utilities (Clektron)
+		JENOVA_INTERNAL(bool ExecuteScript(StringPtr ctronScript, bool noEntrypoint = false));
+		JENOVA_INTERNAL(bool ExecuteScriptFromFile(StringPtr ctronScriptFile, bool noEntrypoint = false));
+		JENOVA_INTERNAL(bool ExecuteScript(const godot::String& ctronScript, bool noEntrypoint = false));
+		JENOVA_INTERNAL(bool ExecuteScriptFromFile(const godot::String& ctronScriptFile, bool noEntrypoint = false));
 
 		// Interface Validator
 		static bool ValidateInterface(void* bridgePtr)
@@ -487,7 +493,7 @@ namespace jenova::sdk
 		bridge->FreeGlobalMemory(id);
 	}
 
-	// Global Variable Storage Utilities :: Wrappers
+	// Global Variable Storage Utilities (Anzen) :: Wrappers
 	JENOVA_WRAPPER godot::Variant GetGlobalVariable(VariableID id)
 	{
 		if (!JenovaSDK::ValidateInterface(bridge)) return godot::Variant();
@@ -519,6 +525,31 @@ namespace jenova::sdk
 	{
 		if (!JenovaSDK::ValidateInterface(bridge)) return;
 		bridge->ClearTask(taskID);
+	}
+
+	// C Scripting Utilities (Clektron)
+	namespace clektron
+	{
+		JENOVA_WRAPPER bool ExecuteScript(StringPtr ctronScript, bool noEntrypoint = false)
+		{
+			if (!JenovaSDK::ValidateInterface(bridge)) return false;
+			return bridge->ExecuteScript(ctronScript, noEntrypoint);
+		}
+		JENOVA_WRAPPER bool ExecuteScriptFromFile(StringPtr ctronScriptFile, bool noEntrypoint = false)
+		{
+			if (!JenovaSDK::ValidateInterface(bridge)) return false;
+			return bridge->ExecuteScript(ctronScriptFile, noEntrypoint);
+		}
+		JENOVA_WRAPPER bool ExecuteScript(const godot::String& ctronScript, bool noEntrypoint = false)
+		{
+			if (!JenovaSDK::ValidateInterface(bridge)) return false;
+			return bridge->ExecuteScript(ctronScript, noEntrypoint);
+		}
+		JENOVA_WRAPPER bool ExecuteScriptFromFile(const godot::String& ctronScriptFile, bool noEntrypoint = false)
+		{
+			if (!JenovaSDK::ValidateInterface(bridge)) return false;
+			return bridge->ExecuteScript(ctronScriptFile, noEntrypoint);
+		}
 	}
 
 	// Template Helpers

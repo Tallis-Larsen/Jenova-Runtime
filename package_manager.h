@@ -47,6 +47,7 @@ public:
 
 private:
 	Button* CreateToolbarItem(const String& toolName, const Ref<Texture2D>& toolIcon, const String& toolTip, Control* toolbar);
+	VSeparator* CreateToolbarSeparator(Control* toolbar);
 	Panel* CreatePackageItem(const jenova::JenovaPackage& jenovaPackage, const Ref<Theme> itemTheme);
 	void ReloadEntireDatabase();
 	bool FetchOnlinePackages(const String& packageDatabaseURL);
@@ -58,12 +59,16 @@ private:
 	bool DownloadPackage(const String& packageFileURL, const String& downloadFilePath);
 	bool InstallPackage(const String& packageHash);
 	bool UninstallPackage(const String& packageHash);
+	bool InstallCustomPackage(const jenova::CustomPackageInstallerMode& installerMode);
+	bool RemoveUnusedPackages();
 	void UtilizeNewPackageTask(const String& taskName, const String& packageHash, Button* utilizerButton = nullptr);
 	bool UpdateStatus(const String& newStatus);
 	void FormatStatus(const String& colorHash, const char* newStatus, ...);
 	void UpdatePackageList(const jenova::PackageType& packageType);
 	void ForceUpdatePackageList();
+	void RequestEditorRestart();
 	void SetBusy(bool busyState, jenova::TaskID taskID = 0);
+	Window* GetWindow() { return currentWindow; }
 	bool CanClose() const;
 	bool PreparePackageManager();
 	void PrepareForClose();
