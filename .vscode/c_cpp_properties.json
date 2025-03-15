@@ -3,6 +3,7 @@
         {
             "name": "Windows-Clang",
             "includePath": [
+                "Source",
                 "Libs",
                 "Libs/GodotSDK",
                 "Libs/GodotSDK/godot_cpp",
@@ -29,7 +30,7 @@
         {
             "name": "Linux-Clang",
             "includePath": [
-                "./",
+                "Source",
                 "Libs",
                 "Libs/GodotSDK",
                 "Libs/GodotSDK/godot_cpp", 

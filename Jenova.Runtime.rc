@@ -2,7 +2,7 @@
 
 // Jenova Imports
 #define NO_JENOVA_RUNTIME_SDK
-#include "Jenova.hpp"
+#include "Source/Jenova.hpp"
 
 // Windows Resource
 #include "winres.h"

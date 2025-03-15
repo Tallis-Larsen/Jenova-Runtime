@@ -37,26 +37,27 @@ directories = [
     "Libs/LithiumSDK",
     "Libs/LithiumSDK/lithium_cpp",   
     "Libs/Archive",
-    "Libs/Curl"
+    "Libs/Curl",
+    "Source"
 ]
 sources = [
-    "jenova.cpp",
-    "jenovaSDK.cpp",
-    "script_instance_base.cpp",
-    "script_object.cpp",
-    "script_instance.cpp",
-    "script_resource.cpp",
-    "script_interpreter.cpp",
-    "script_templates.cpp",
-    "script_language.cpp",
-    "script_compiler.cpp",
-    "script_manager.cpp",
-    "clektron.cpp",
-    "tiny_profiler.cpp",
-    "task_system.cpp",
-    "package_manager.cpp",
-    "asset_monitor.cpp",
-    "gdextension_exporter.cpp"
+    "Source/jenova.cpp",
+    "Source/jenovaSDK.cpp",
+    "Source/script_instance_base.cpp",
+    "Source/script_object.cpp",
+    "Source/script_instance.cpp",
+    "Source/script_resource.cpp",
+    "Source/script_interpreter.cpp",
+    "Source/script_templates.cpp",
+    "Source/script_language.cpp",
+    "Source/script_compiler.cpp",
+    "Source/script_manager.cpp",
+    "Source/clektron.cpp",
+    "Source/tiny_profiler.cpp",
+    "Source/task_system.cpp",
+    "Source/package_manager.cpp",
+    "Source/asset_monitor.cpp",
+    "Source/gdextension_exporter.cpp"
 ]
 
 # Global Options
@@ -510,7 +511,7 @@ def build_linux(compilerBinary, linkerBinary, buildMode, buildSystem):
     compile_commands = {}
     object_files = []
     for source in sources:
-        object_file = f"{cacheDir}/{source.replace('.cpp', '.o')}"
+        object_file = f"{cacheDir}/{os.path.basename(source).replace('.cpp', '.o')}"
         object_files.append(object_file)
         compile_command = (
             f"{compiler} -m64 -O3 -fPIC -pipe -w -std=c++20 -pthread -fexceptions "
@@ -550,7 +551,7 @@ def build_linux(compilerBinary, linkerBinary, buildMode, buildSystem):
 
     # Prepare Release
     open(f"{sdkDir}/.gitignore", "w").write("*")
-    shutil.copy2("./JenovaSDK.h", f"{sdkDir}/JenovaSDK.h")
+    shutil.copy2("./Source/JenovaSDK.h", f"{sdkDir}/JenovaSDK.h")
     shutil.copy2("./Jenova.Runtime.gdextension", f"{outputDir}/Jenova.Runtime.gdextension")
 
     # Create Package
@@ -1128,7 +1129,7 @@ def build_windows(compilerBinary, linkerBinary, buildMode, buildSystem):
             if buildMode == "win-clangcl":
                 compile_commands = {}
                 for source in sources:
-                    object_file = f"{cacheDir}/{source.replace('.cpp', '.obj')}"
+                    object_file = f"{cacheDir}/{os.path.basename(source).replace('.cpp', '.obj')}"
                     compile_command = (
                         f"{compiler} /c /permissive /GS /GL /W0 /Gy /Zc:wchar_t "
                         f"{' '.join([f'/I{guard_path(directory)}' for directory in directories])} "
@@ -1234,7 +1235,7 @@ def build_windows(compilerBinary, linkerBinary, buildMode, buildSystem):
         object_files = []
         if buildMode == "win-clang":
             for source in sources:
-                object_file = f"{cacheDir}/{source.replace('.cpp', '.o')}"
+                object_file = f"{cacheDir}/{os.path.basename(source).replace('.cpp', '.o')}"
                 object_files.append(object_file)
                 compile_command = (
                     f"{compiler} -m64 -O3 -g -gcodeview -fno-use-linker-plugin "
@@ -1246,7 +1247,7 @@ def build_windows(compilerBinary, linkerBinary, buildMode, buildSystem):
                 compile_commands[source] = compile_command
         if buildMode == "win-gcc":
             for source in sources:
-                object_file = f"{cacheDir}/{source.replace('.cpp', '.o')}"
+                object_file = f"{cacheDir}/{os.path.basename(source).replace('.cpp', '.o')}"
                 object_files.append(object_file)
                 compile_command = (
                     f"{compiler} -m64 -O3 -g -gcodeview -fno-use-linker-plugin "
@@ -1318,7 +1319,7 @@ def build_windows(compilerBinary, linkerBinary, buildMode, buildSystem):
 
     # Prepare Release
     open(f"{sdkDir}/.gitignore", "w").write("*")
-    shutil.copy2("./JenovaSDK.h", f"{sdkDir}/JenovaSDK.h")
+    shutil.copy2("./Source/JenovaSDK.h", f"{sdkDir}/JenovaSDK.h")
     shutil.copy2("./Jenova.Runtime.gdextension", f"{outputDir}/Jenova.Runtime.gdextension")
 
     # Create Package
