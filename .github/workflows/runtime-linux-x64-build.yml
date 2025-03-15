@@ -63,7 +63,7 @@ jobs:
         run: |
           mkdir -p packaging/Jenova/JenovaSDK
           echo "" > packaging/Jenova/JenovaSDK/.gdignore
-          cp JenovaSDK.h packaging/Jenova/JenovaSDK/
+          cp Source/JenovaSDK.h packaging/Jenova/JenovaSDK/
           cp Jenova.Runtime.gdextension packaging/Jenova/
           cp Linux64/Jenova.Runtime.Linux64.so packaging/Jenova/
 
@@ -133,7 +133,7 @@ jobs:
         run: |
           mkdir -p packaging/Jenova/JenovaSDK
           echo "" > packaging/Jenova/JenovaSDK/.gdignore
-          cp JenovaSDK.h packaging/Jenova/JenovaSDK/
+          cp Source/JenovaSDK.h packaging/Jenova/JenovaSDK/
           cp Jenova.Runtime.gdextension packaging/Jenova/
           cp Linux64/Jenova.Runtime.Linux64.so packaging/Jenova/
 

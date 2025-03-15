@@ -30,7 +30,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path packaging/Jenova/JenovaSDK -Force
           New-Item -ItemType File -Path packaging/Jenova/JenovaSDK/.gdignore -Force
-          Copy-Item JenovaSDK.h packaging/Jenova/JenovaSDK/
+          Copy-Item Source/JenovaSDK.h packaging/Jenova/JenovaSDK/
           Copy-Item Jenova.Runtime.gdextension packaging/Jenova/
           Copy-Item Win64/Jenova.Runtime.Win64.dll packaging/Jenova/
           Copy-Item Win64/Jenova.Runtime.Win64.pdb packaging/Jenova/
@@ -67,7 +67,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path packaging/Jenova/JenovaSDK -Force
           New-Item -ItemType File -Path packaging/Jenova/JenovaSDK/.gdignore -Force
-          Copy-Item JenovaSDK.h packaging/Jenova/JenovaSDK/
+          Copy-Item Source/JenovaSDK.h packaging/Jenova/JenovaSDK/
           Copy-Item Jenova.Runtime.gdextension packaging/Jenova/
           Copy-Item Win64/Jenova.Runtime.Win64.dll packaging/Jenova/
           Copy-Item Win64/Jenova.Runtime.Win64.pdb packaging/Jenova/
@@ -104,7 +104,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path packaging/Jenova/JenovaSDK -Force
           New-Item -ItemType File -Path packaging/Jenova/JenovaSDK/.gdignore -Force
-          Copy-Item JenovaSDK.h packaging/Jenova/JenovaSDK/
+          Copy-Item Source/JenovaSDK.h packaging/Jenova/JenovaSDK/
           Copy-Item Jenova.Runtime.gdextension packaging/Jenova/
           Copy-Item Win64/Jenova.Runtime.Win64.dll packaging/Jenova/
           Copy-Item Win64/Jenova.Runtime.Win64.pdb packaging/Jenova/
@@ -141,7 +141,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path packaging/Jenova/JenovaSDK -Force
           New-Item -ItemType File -Path packaging/Jenova/JenovaSDK/.gdignore -Force
-          Copy-Item JenovaSDK.h packaging/Jenova/JenovaSDK/
+          Copy-Item Source/JenovaSDK.h packaging/Jenova/JenovaSDK/
           Copy-Item Jenova.Runtime.gdextension packaging/Jenova/
           Copy-Item Win64/Jenova.Runtime.Win64.dll packaging/Jenova/
           Copy-Item Win64/Jenova.Runtime.Win64.pdb packaging/Jenova/
