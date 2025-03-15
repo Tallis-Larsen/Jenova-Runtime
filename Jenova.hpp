@@ -20,13 +20,13 @@
 #define APP_COMPANYNAME					"MemarDesign™ LLC."
 #define APP_DESCRIPTION					"Real-Time C++ Scripting System for Godot Game Engine, Developed By Hamid.Memar."
 #define APP_COPYRIGHT					"Copyright MemarDesign™ LLC. (©) 2024-2025, All Rights Reserved."
-#define APP_VERSION						"0.3.7.1"
+#define APP_VERSION						"0.3.7.2"
 #define APP_VERSION_MIDDLEFIX			" "
 #define APP_VERSION_POSTFIX				"Beta"
 #define APP_VERSION_SINGLECHAR			"b"
-#define APP_VERSION_DATA				0, 3, 7, 1
+#define APP_VERSION_DATA				0, 3, 7, 2
 #define APP_VERSION_BUILD				"0"
-#define APP_VERSION_NAME				"Dragon"
+#define APP_VERSION_NAME				"Silverlight"
 
 #ifndef NO_JENOVA_RUNTIME_SDK
 
@@ -231,7 +231,8 @@
 #include <classes/script_language.hpp>
 #include <classes/script_language_extension.hpp>
 #include <classes/confirmation_dialog.hpp>
-#include <classes/worker_thread_pool.hpp>
+#include <classes/tls_options.hpp>
+#include <classes/http_client.hpp>
 
 // Godot SDK :: Templates
 #include <templates/hash_map.hpp>
@@ -322,6 +323,7 @@ namespace jenova
 	typedef String ScriptIdentifier;
 	typedef uint32_t CompilerFeatures;
 	typedef uint32_t LoaderFlags;
+	typedef nlohmann::json json_t;
 	typedef std::string RootPath;
 	typedef std::string EncodedData;
 	typedef std::string DecodedData;
@@ -789,6 +791,7 @@ namespace jenova
 		constexpr char* VisualStudioWatchdogFile				= "Jenova.VisualStudio.jwd";
 		constexpr char* JenovaTemporaryBootScriptFile			= "Jenova.Temporary.Boot.ctron";
 		constexpr char* JenovaPackageDatabaseURL				= "https://raw.githubusercontent.com";
+		constexpr char* JenovaReleaseMetadataURL				= "https://raw.githubusercontent.com";
 		constexpr char* JenovaPackageRepositoryPath				= "Jenova/Packages/";
 
 		constexpr int JenovaTerminalLogFontSize					= 12;
@@ -987,6 +990,12 @@ namespace jenova
 	bool ExecuteLaunchScript();
 	String GetTemporaryLaunchScriptFilePath();
 	bool ExecuteTemporaryLaunchScript();
+	String DownloadContentFromURLToString(const String& hostName, const String& fileURL, int targetPort = 443);
+	std::string DownloadContentFromURLToStdString(const std::string& hostName, const std::string& fileURL, int targetPort = 443);
+	jenova::json_t DownloadAndParseSerializedContentFromURL(const std::string& hostName, const std::string& fileURL, int targetPort = 443);
+	void CheckForRuntimeUpdate();
+	std::string FormatTimestampToStdString(time_t timestamp);
+	void SwitchToJenovaTerminalTab();
 	#pragma endregion
 
 	// Crash Handlers

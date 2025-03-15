@@ -322,7 +322,7 @@ namespace jenova
 
             // Load Cache if Exists
             bool buildCacheFileFound = false;
-            nlohmann::json buildCacheDatabase;
+            jenova::json_t buildCacheDatabase;
             if (!std::filesystem::exists(this->jenovaCachePath + jenova::GlobalSettings::JenovaBuildCacheDatabaseFile))
             {
                 // Cache Doesn't Exists Generate It [Required for Proxies]
@@ -342,7 +342,7 @@ namespace jenova
                 std::string buildCacheDatabaseContent(std::istreambuf_iterator<char>(buildCacheDatabaseReader), {});
                 if (!buildCacheDatabaseContent.empty())
                 {
-                    buildCacheDatabase = nlohmann::json::parse(buildCacheDatabaseContent);
+                    buildCacheDatabase = jenova::json_t::parse(buildCacheDatabaseContent);
                     buildCacheFileFound = true;
                 }
             }
@@ -1284,7 +1284,7 @@ namespace jenova
 
             // Load Cache if Exists
             bool buildCacheFileFound = false;
-            nlohmann::json buildCacheDatabase;
+            jenova::json_t buildCacheDatabase;
             if (!std::filesystem::exists(this->jenovaCachePath + jenova::GlobalSettings::JenovaBuildCacheDatabaseFile))
             {
                 // Cache Doesn't Exists Generate It [Required for Proxies]
@@ -1304,7 +1304,7 @@ namespace jenova
                 std::string buildCacheDatabaseContent(std::istreambuf_iterator<char>(buildCacheDatabaseReader), {});
                 if (!buildCacheDatabaseContent.empty())
                 {
-                    buildCacheDatabase = nlohmann::json::parse(buildCacheDatabaseContent);
+                    buildCacheDatabase = jenova::json_t::parse(buildCacheDatabaseContent);
                     buildCacheFileFound = true;
                 }
             }
@@ -2043,7 +2043,7 @@ namespace jenova
 
             // Load Cache if Exists
             bool buildCacheFileFound = false;
-            nlohmann::json buildCacheDatabase;
+            jenova::json_t buildCacheDatabase;
             if (!std::filesystem::exists(this->jenovaCachePath + jenova::GlobalSettings::JenovaBuildCacheDatabaseFile))
             {
                 // Cache Doesn't Exist, Generate It
@@ -2064,7 +2064,7 @@ namespace jenova
                 std::string buildCacheDatabaseContent(std::istreambuf_iterator<char>(buildCacheDatabaseReader), {});
                 if (!buildCacheDatabaseContent.empty())
                 {
-                    buildCacheDatabase = nlohmann::json::parse(buildCacheDatabaseContent);
+                    buildCacheDatabase = jenova::json_t::parse(buildCacheDatabaseContent);
                     buildCacheFileFound = true;
                 }
             }

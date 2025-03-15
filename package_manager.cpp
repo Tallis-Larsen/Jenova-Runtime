@@ -619,7 +619,7 @@ bool JenovaPackageManager::FetchOnlinePackages(const String& packageDatabaseURL)
 	try 
 	{
 		// Parse JSON Database
-		nlohmann::json packageDatabase = nlohmann::json::parse(responseData);
+		jenova::json_t packageDatabase = jenova::json_t::parse(responseData);
 
 		// Iterate Over Packages
 		for (const auto& packageItem : packageDatabase["packages"]) 
@@ -683,7 +683,7 @@ bool JenovaPackageManager::ObtainInstalledPackages()
 	try
 	{
 		// Parse JSON Database
-		nlohmann::json packageDatabase = nlohmann::json::parse(packageDatabaseContent);
+		jenova::json_t packageDatabase = jenova::json_t::parse(packageDatabaseContent);
 
 		// Iterate Over Packages
 		for (const auto& packageItem : packageDatabase["packages"])
@@ -725,16 +725,16 @@ bool JenovaPackageManager::CacheInstalledPackages()
 	try
 	{
 		// Create Serializer
-		nlohmann::json packageDatabase;
+		jenova::json_t packageDatabase;
 
 		// Create Packages Array
-		packageDatabase["packages"] = nlohmann::json::array();
+		packageDatabase["packages"] = jenova::json_t::array();
 
 		// Iterate Over Packages
 		for (const auto& installedPackage : installedPackages)
 		{
 			// Create JSON object for each package
-			nlohmann::json packageItem;
+			jenova::json_t packageItem;
 			packageItem["pkgName"] = AS_STD_STRING(installedPackage.pkgName);
 			packageItem["pkgVersion"] = AS_STD_STRING(installedPackage.pkgVersion);
 			packageItem["pkgHash"] = AS_STD_STRING(installedPackage.pkgHash);
@@ -1343,6 +1343,7 @@ bool JenovaPackageManager::InstallCustomPackage(const jenova::CustomPackageInsta
 				// Add Installed Package to Database
 				jenova::JenovaPackage newPackage;
 				newPackage.pkgDestination = ProjectSettings::get_singleton()->localize_path(String(pkgDestination.c_str()));
+				if (newPackage.pkgDestination.ends_with("/")) newPackage.pkgDestination = newPackage.pkgDestination.erase(newPackage.pkgDestination.length() - 1);
 				newPackage.pkgHash = jenova::GenerateMD5HashFromFile(packageFilePath);
 				newPackage.pkgName = pkgName;
 				newPackage.pkgPlatform = pkgPlatform;
@@ -1386,6 +1387,7 @@ bool JenovaPackageManager::InstallCustomPackage(const jenova::CustomPackageInsta
 				// Add Installed Package to Database
 				jenova::JenovaPackage newPackage;
 				newPackage.pkgDestination = ProjectSettings::get_singleton()->localize_path(packageDirectory);
+				if (newPackage.pkgDestination.ends_with("/")) newPackage.pkgDestination = newPackage.pkgDestination.erase(newPackage.pkgDestination.length() - 1);
 				newPackage.pkgHash = jenova::GenerateStandardUIDFromPath(packageDirectory).md5_text();
 				newPackage.pkgName = pkgName;
 				newPackage.pkgPlatform = pkgPlatform;

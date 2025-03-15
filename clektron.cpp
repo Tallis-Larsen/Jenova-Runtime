@@ -1006,8 +1006,8 @@ bool Clektron::ExecuteScript(const std::string& ctronScriptContent, bool noEntry
 
     // Utility API Symbols
     void Print(String message);
-    void PrintError(CString stage, CString message);
-    void PrintWarning(CString stage, CString message);
+    void PrintError(String stage, String message);
+    void PrintWarning(String stage, String message);
     String Format(String fmt, ...);
     int System(String command);
     String GetFileMD5Hash(String filePath);

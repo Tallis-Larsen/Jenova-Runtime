@@ -92,7 +92,7 @@ python3 ./Jenova.Builder.py --compiler win-gcc --skip-banner
 
 The toolchain is only 150MB and contains all compiler toolchains All-in-One. You don't need to install anything extra, including Visual Studio.
 
-> **Note : **Using Jenova Builder with `win-msvc` also compiles a fully-featured Jenova Runtime. It serves as an alternative to Visual Studio 2022 with C++20.
+> **Note :** Using Jenova Builder with `win-msvc` also compiles a fully-featured Jenova Runtime. It serves as an alternative to Visual Studio 2022 with C++20.
 
 ### Linux x64
 

@@ -70,7 +70,7 @@ private:
     static inline bool                          isExecuting             = false;
     static inline jenova::ModuleHandle          moduleHandle            = nullptr;
     static inline jenova::ModuleAddress         moduleBaseAddress       = 0;
-    static inline nlohmann::json                moduleMetaData          = "{}";
+    static inline jenova::json_t                moduleMetaData          = "{}";
     static inline size_t                        moduleBinarySize        = 0;
     static inline bool                          hasDebugInformation     = false;
     static inline bool                          executeInDebugMode      = false;

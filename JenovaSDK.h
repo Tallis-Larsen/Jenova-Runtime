@@ -47,7 +47,7 @@
 
 // Jenova Utilities
 #define JENOVA_EXPORT			extern "C" JENOVA_API_EXPORT
-#define JENOVA_CALLBACK			static_cast<void(*)(void)>([]()
+#define JENOVA_CALLBACK			(void*)static_cast<void(*)(void)>([]()
 
 // Jenova Interface
 #define JENOVA_WRAPPER			static inline

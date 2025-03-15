@@ -231,7 +231,7 @@ jenova::FunctionList JenovaInterpreter::GetFunctionsList(const std::string& scri
         jenova::FunctionList functionNames;
         
         // Get Script Metadata by UID
-        nlohmann::json scriptMetadata = moduleMetaData["Scripts"][scriptUID]["methods"];
+        jenova::json_t scriptMetadata = moduleMetaData["Scripts"][scriptUID]["methods"];
 
         // Add Functions to List
         for (const auto& functionName : scriptMetadata.items()) functionNames.push_back(functionName.key());
@@ -252,7 +252,7 @@ jenova::FunctionAddress JenovaInterpreter::GetFunctionAddress(const std::string&
         if (!moduleMetaData["Scripts"].contains(scriptUID)) return 0;
 
         // Get Script Metadata by UID
-        nlohmann::json scriptMetadata = moduleMetaData["Scripts"][scriptUID]["methods"];
+        jenova::json_t scriptMetadata = moduleMetaData["Scripts"][scriptUID]["methods"];
 
         // Get Function Address
         for (const auto& funcName : scriptMetadata.items())
@@ -282,7 +282,7 @@ jenova::ParameterTypeList JenovaInterpreter::GetFunctionParameters(const std::st
         if (!moduleMetaData["Scripts"].contains(scriptUID)) return jenova::ParameterTypeList();
 
         // Get Script Metadata by UID
-        nlohmann::json scriptMetadata = moduleMetaData["Scripts"][scriptUID]["methods"];
+        jenova::json_t scriptMetadata = moduleMetaData["Scripts"][scriptUID]["methods"];
 
         // Get Function Parameters
         for (const auto& funcName : scriptMetadata.items())
@@ -313,7 +313,7 @@ std::string JenovaInterpreter::GetFunctionReturn(const std::string& functionName
         if (!moduleMetaData["Scripts"].contains(scriptUID)) return "Unknown";
 
         // Get Script Metadata by UID
-        nlohmann::json scriptMetadata = moduleMetaData["Scripts"][scriptUID]["methods"];
+        jenova::json_t scriptMetadata = moduleMetaData["Scripts"][scriptUID]["methods"];
 
         // Get Function Return Type
         for (const auto& funcName : scriptMetadata.items())
@@ -402,7 +402,7 @@ jenova::ScriptPropertyContainer JenovaInterpreter::GetPropertyContainer(const st
         if (!moduleMetaData["Scripts"][scriptUID].contains("database")) return propertyContainer;
 
         // Get Script Database by UID
-        nlohmann::json scriptDatabase = moduleMetaData["Scripts"][scriptUID]["database"];
+        jenova::json_t scriptDatabase = moduleMetaData["Scripts"][scriptUID]["database"];
 
         // Check If Script has Properties
         if (!scriptDatabase.contains("properties")) return propertyContainer;
@@ -716,13 +716,13 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
         try
         {
             // Create JSON Serializer
-            nlohmann::json serializer;
+            jenova::json_t serializer;
 
             // Variables to Store __ImageBase
             uint64_t imageBaseAddress = 0;
 
             // Serialize Script Modules
-            for (const auto& scriptModule : scriptModules) serializer["Scripts"][AS_STD_STRING(scriptModule.scriptUID)] = nlohmann::json::object();
+            for (const auto& scriptModule : scriptModules) serializer["Scripts"][AS_STD_STRING(scriptModule.scriptUID)] = jenova::json_t::object();
 
             // Open Map File
             if (!std::filesystem::exists(mapFilePath))
@@ -781,7 +781,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
                         }
 
                         // Create Function Metadata Serializer
-                        nlohmann::json funcSerializer;
+                        jenova::json_t funcSerializer;
                         funcSerializer["Offset"] = actualOffset;
 
                         // Parse Functions Mangled Name And Extract Types
@@ -865,7 +865,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
                         }
 
                         // Create Property Metadata Serializer
-                        nlohmann::json propSerializer;
+                        jenova::json_t propSerializer;
                         propSerializer["Offset"] = actualOffset;
 
                         // Parse Properties Mangled Name And Extract Type
@@ -962,7 +962,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
                             }
 
                             // Create Property Metadata Serializer
-                            nlohmann::json propSerializer;
+                            jenova::json_t propSerializer;
                             propSerializer["Offset"] = actualOffset;
 
                             // Parse Properties Mangled Name And Extract Type
@@ -1031,7 +1031,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
                             }
 
                             // Create Function Metadata Serializer
-                            nlohmann::json funcSerializer;
+                            jenova::json_t funcSerializer;
                             funcSerializer["Offset"] = actualOffset;
 
                             // Parse Functions Mangled Name And Extract Types
@@ -1108,7 +1108,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
                     std::string propDatabase = jenova::ReadStdStringFromFile(AS_STD_STRING(scriptModule.scriptPropertiesFile));
                     if (!propDatabase.empty())
                     {
-                        serializer["Scripts"][AS_STD_STRING(scriptModule.scriptUID)]["database"]["properties"] = nlohmann::json::parse(propDatabase);
+                        serializer["Scripts"][AS_STD_STRING(scriptModule.scriptUID)]["database"]["properties"] = jenova::json_t::parse(propDatabase);
                     }
                 }
             }
@@ -1149,7 +1149,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
         try
         {
             // Create JSON Serializer
-            nlohmann::json serializer;
+            jenova::json_t serializer;
 
             // Generate Extra Paths
             std::string moduleFilePath = buildResult.buildPath + "Jenova.Module.so";
@@ -1185,7 +1185,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
                     if (params.empty()) params.push_back("void");
 
                     // Add Function
-                    if (!serializer["Scripts"].contains(scriptUID)) serializer["Scripts"][scriptUID]["methods"] = nlohmann::json::object();
+                    if (!serializer["Scripts"].contains(scriptUID)) serializer["Scripts"][scriptUID]["methods"] = jenova::json_t::object();
 
                     // Add Parameter Count & Return Type
                     serializer["Scripts"][scriptUID]["methods"][funcName] = { {"ParamCount", params.size()}, {"ReturnType", returnType} };
@@ -1223,7 +1223,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
                     std::string propType = jenova::ExtractPropertyTypeFromSignature(propSignature, buildResult.compilerModel);
 
                     // Set Data
-                    if (!serializer["Scripts"].contains(scriptUID)) serializer["Scripts"][scriptUID]["properties"] = nlohmann::json::object();
+                    if (!serializer["Scripts"].contains(scriptUID)) serializer["Scripts"][scriptUID]["properties"] = jenova::json_t::object();
                     serializer["Scripts"][scriptUID]["properties"][propName] = { {"Type", propType} };
                 }
             }
@@ -1286,7 +1286,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
                     std::string propDatabase = jenova::ReadStdStringFromFile(AS_STD_STRING(scriptModule.scriptPropertiesFile));
                     if (!propDatabase.empty())
                     {
-                        serializer["Scripts"][AS_STD_STRING(scriptModule.scriptUID)]["database"]["properties"] = nlohmann::json::parse(propDatabase);
+                        serializer["Scripts"][AS_STD_STRING(scriptModule.scriptUID)]["database"]["properties"] = jenova::json_t::parse(propDatabase);
                     }
                 }
             }
@@ -1332,7 +1332,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
         try
         {
             // Create JSON Serializer
-            nlohmann::json serializer;
+            jenova::json_t serializer;
 
             // Generate Extra Paths
             std::string moduleFilePath = buildResult.buildPath + "Jenova.Module.so";
@@ -1368,7 +1368,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
                     if (params.empty()) params.push_back("void");
 
                     // Add Function
-                    if (!serializer["Scripts"].contains(scriptUID)) serializer["Scripts"][scriptUID]["methods"] = nlohmann::json::object();
+                    if (!serializer["Scripts"].contains(scriptUID)) serializer["Scripts"][scriptUID]["methods"] = jenova::json_t::object();
 
                     // Add Parameter Count & Return Type
                     serializer["Scripts"][scriptUID]["methods"][funcName] = { {"ParamCount", params.size()}, {"ReturnType", returnType} };
@@ -1406,7 +1406,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
                     std::string propType = jenova::ExtractPropertyTypeFromSignature(propSignature, buildResult.compilerModel);
 
                     // Set Data
-                    if (!serializer["Scripts"].contains(scriptUID)) serializer["Scripts"][scriptUID]["properties"] = nlohmann::json::object();
+                    if (!serializer["Scripts"].contains(scriptUID)) serializer["Scripts"][scriptUID]["properties"] = jenova::json_t::object();
                     serializer["Scripts"][scriptUID]["properties"][propName] = {{"Type", propType}};
                 }
             }
@@ -1469,7 +1469,7 @@ jenova::SerializedData JenovaInterpreter::GenerateModuleMetadata(const std::stri
                     std::string propDatabase = jenova::ReadStdStringFromFile(AS_STD_STRING(scriptModule.scriptPropertiesFile));
                     if (!propDatabase.empty())
                     {
-                        serializer["Scripts"][AS_STD_STRING(scriptModule.scriptUID)]["database"]["properties"] = nlohmann::json::parse(propDatabase);
+                        serializer["Scripts"][AS_STD_STRING(scriptModule.scriptUID)]["database"]["properties"] = jenova::json_t::parse(propDatabase);
                     }
                 }
             }
@@ -1513,7 +1513,7 @@ bool JenovaInterpreter::UpdateConfigurationsFromMetaData(const jenova::Serialize
     try
     {
         // Parse and Set Interpreter Metadata
-        moduleMetaData = nlohmann::json::parse(metaData);
+        moduleMetaData = jenova::json_t::parse(metaData);
 
         // Set Interpreter Backend
         if (moduleMetaData.contains("InterpreterBackend"))
@@ -1565,7 +1565,7 @@ bool JenovaInterpreter::UpdatePropertyStorageFromMetaData()
     try
     {
         // Get Scripts
-        nlohmann::json moduleScripts = moduleMetaData["Scripts"];
+        jenova::json_t moduleScripts = moduleMetaData["Scripts"];
 
         // Extract Properties from Metadata
         for (const auto& moduleScript : moduleScripts.items())
@@ -1630,7 +1630,7 @@ jenova::PropertyList JenovaInterpreter::GetPropertiesList(std::string& scriptUID
         jenova::PropertyList propertyNames;
 
         // Get Script Metadata by UID
-        nlohmann::json scriptMetadata = moduleMetaData["Scripts"][scriptUID]["properties"];
+        jenova::json_t scriptMetadata = moduleMetaData["Scripts"][scriptUID]["properties"];
 
         // Add Property to List
         for (const auto& propertyName : scriptMetadata.items()) propertyNames.push_back(propertyName.key());
@@ -1651,7 +1651,7 @@ std::string JenovaInterpreter::GetPropertyType(const std::string& propertyName, 
         if (!moduleMetaData["Scripts"].contains(scriptUID)) return std::string();
 
         // Get Script Metadata by UID
-        nlohmann::json scriptMetadata = moduleMetaData["Scripts"][scriptUID]["properties"];
+        jenova::json_t scriptMetadata = moduleMetaData["Scripts"][scriptUID]["properties"];
 
         // Find and Return Property Type
         for (const auto& prop : scriptMetadata.items())
@@ -1675,7 +1675,7 @@ jenova::PropertyAddress JenovaInterpreter::GetPropertyAddress(const std::string&
         if (!moduleMetaData["Scripts"].contains(scriptUID)) return 0;
 
         // Get Script Metadata by UID
-        nlohmann::json scriptMetadata = moduleMetaData["Scripts"][scriptUID]["properties"];
+        jenova::json_t scriptMetadata = moduleMetaData["Scripts"][scriptUID]["properties"];
 
         // Find and return Property Address
         for (const auto& prop : scriptMetadata.items())

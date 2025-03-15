@@ -1206,7 +1206,7 @@ namespace jenova
 					jenova::OpenURL("https://discord.gg/p7zAf6aBPz");
 					break;
 				case jenova::EditorMenuID::CheckForUpdates:
-					jenova::Error("Jenova Main Menu", "Feature Not Implemented Yet");
+					jenova::CheckForRuntimeUpdate();
 					break;
 				case jenova::EditorMenuID::AboutJenova:
 					OpenAboutProjektJenova();
@@ -1429,8 +1429,8 @@ namespace jenova
 							try
 							{
 								jenova::Output("Creating Breakpoint Database Cache...");
-								nlohmann::json scriptBreakpointsSerializer;
-								scriptBreakpointsSerializer["Breakpoints"]["Scripts"] = nlohmann::json::object();
+								jenova::json_t scriptBreakpointsSerializer;
+								scriptBreakpointsSerializer["Breakpoints"]["Scripts"] = jenova::json_t::object();
 								for (const String& scriptFile : scriptEditorConfig->get_sections())
 								{
 									Dictionary state = scriptEditorConfig->get_value(scriptFile, "state");
@@ -1439,13 +1439,13 @@ namespace jenova
 									PackedInt32Array breakpoints = state["breakpoints"];
 									if (breakpoints.size() == 0) continue;
 									std::string uid = AS_STD_STRING(jenova::GenerateStandardUIDFromPath(scriptFile));
-									nlohmann::json& scriptEntry = scriptBreakpointsSerializer["Breakpoints"]["Scripts"][uid];
+									jenova::json_t& scriptEntry = scriptBreakpointsSerializer["Breakpoints"]["Scripts"][uid];
 									if (scriptEntry.is_null())
 									{
 										scriptEntry = {
 											{"Path", AS_STD_STRING(scriptFile)},
 											{"FullPath", AS_STD_STRING(ProjectSettings::get_singleton()->globalize_path(scriptFile))},
-											{"Lines", nlohmann::json::array()}};
+											{"Lines", jenova::json_t::array()}};
 									}
 									for (int i = 0; i < breakpoints.size(); ++i)
 									{
@@ -1847,11 +1847,11 @@ namespace jenova
 				JenovaTinyProfiler::CreateCheckpoint("JenovaBootstrapModule");
 
 				// Parse And Progress Jenova Configuration
-				nlohmann::json jenovaConfiguration;
+				jenova::json_t jenovaConfiguration;
 				try
 				{
 					// Deserialize Configuration
-					jenovaConfiguration = nlohmann::json::parse(AS_STD_STRING(jenovaConfig));
+					jenovaConfiguration = jenova::json_t::parse(AS_STD_STRING(jenovaConfig));
 				}
 				catch (const std::exception&)
 				{
@@ -2191,6 +2191,13 @@ namespace jenova
 					jenovaLogOutput->remove_theme_font_size_override("bold_font_size");
 				}
 			}
+			void SwitchToTerminal()
+			{
+				if (jenova::GlobalStorage::CurrentEditorVerboseOutput == jenova::EditorVerboseOutput::JenovaTerminal && jenovaTerminal)
+				{
+					this->make_bottom_panel_item_visible(jenovaTerminal);
+				}
+			}
 			void VerboseLog(const String& logMessage)
 			{
 				if (jenovaLogOutput) 
@@ -2288,7 +2295,7 @@ namespace jenova
 			bool CreateJenovaConfiguration(const jenova::ScriptEntityContainer& scriptEntityContainer, bool exportOnDisk = false)
 			{
 				// Jenova Configurations Serializer
-				nlohmann::json jenovaConfiguration;
+				jenova::json_t jenovaConfiguration;
 
 				// Get User-Defined Macros
 				Variant preprocessorDefinitions;
@@ -2321,10 +2328,10 @@ namespace jenova
 					jenovaConfiguration["ScriptsCount"] = scriptEntityContainer.entityCount;
 
 					// Serialize Scripts Paths & Identities
-					jenovaConfiguration["ScriptEntities"] = nlohmann::json::array();
+					jenovaConfiguration["ScriptEntities"] = jenova::json_t::array();
 					for (size_t i = 0; i < scriptEntityContainer.entityCount; i++)
 					{
-						nlohmann::json::object_t scriptEntitySerializer;
+						jenova::json_t::object_t scriptEntitySerializer;
 						scriptEntitySerializer["ScriptIdentity"] = AS_STD_STRING(scriptEntityContainer.scriptModules[i].scriptUID);
 						std::string scriptPathEncoded(scriptEntityContainer.scriptFilesReleative[i]);
 						jenova::ReplaceAllMatchesWithString(scriptPathEncoded, "\\", "/");
@@ -2398,7 +2405,7 @@ namespace jenova
 					vsInstances.clear();
 
 					// Get Installed Visual Studios Metadata
-					nlohmann::json vsMetadata = nlohmann::json::parse(GetVistualStudioMetadata());
+					jenova::json_t vsMetadata = jenova::json_t::parse(GetVistualStudioMetadata());
 
 					// Create Data
 					for (const auto& vsInstanceData : vsMetadata["Instances"])
@@ -2674,7 +2681,7 @@ namespace jenova
 				jenova::EncodedData jenovaConfigurationBase64 = "";
 				try
 				{
-					nlohmann::json jenovaConfiguration = nlohmann::json::parse(jenova::GlobalStorage::CurrentJenovaGeneratedConfiguration);
+					jenova::json_t jenovaConfiguration = jenova::json_t::parse(jenova::GlobalStorage::CurrentJenovaGeneratedConfiguration);
 					jenovaConfiguration["OutputPath"] = outputPath;
 					jenovaConfiguration["IntermediatePath"] = intermediatePath;
 					jenovaConfiguration["BuiltinPath"] = builtinPath;
@@ -2808,23 +2815,8 @@ namespace jenova
 					dialog->get_ok_button()->set_text("Open Visual Studio");
 					dialog->get_cancel_button()->set_text("No Thanks!");
 
-					// Define Internal UI Callback
-					class OnConfirmedEvent : public RefCounted
-					{
-					private:
-						JenovaEditorPlugin* pluginInstance;
-
-					public:
-						OnConfirmedEvent(JenovaEditorPlugin* _plugin) { pluginInstance = _plugin; }
-						void ProcessEvent()
-						{
-							pluginInstance->OpenProjectInVisualStudio();
-							memdelete(this);
-						}
-					};
-
 					// Create & Assign UI Callback to Dialog
-					dialog->connect("confirmed", callable_mp(memnew(OnConfirmedEvent(this)), &OnConfirmedEvent::ProcessEvent));
+					dialog->connect("confirmed", callable_mp(this, &JenovaEditorPlugin::OpenProjectInVisualStudio));
 					dialog->connect("confirmed", callable_mp((Node*)dialog, &ConfirmationDialog::queue_free));
 					dialog->connect("canceled", callable_mp((Node*)dialog, &ConfirmationDialog::queue_free));
 
@@ -2863,10 +2855,10 @@ namespace jenova
 					try
 					{
 						// Create Serializer/Deserializer
-						nlohmann::json vsMetadata;
-						nlohmann::json vsInstancesMetadata = nlohmann::json::parse(jsonData);
+						jenova::json_t vsMetadata;
+						jenova::json_t vsInstancesMetadata = jenova::json_t::parse(jsonData);
 						vsMetadata["InstancesNumber"] = vsInstancesMetadata.size();
-						vsMetadata["Instances"] = nlohmann::json::object();
+						vsMetadata["Instances"] = jenova::json_t::object();
 
 						// Collect Instances
 						for (const auto& vsInstance : vsInstancesMetadata)
@@ -2875,7 +2867,7 @@ namespace jenova
 							std::string instanceID = vsInstance["catalog"]["id"].get<std::string>();
 						
 							// Add New Instance From Extracted Information
-							vsMetadata["Instances"][instanceID] = nlohmann::json::object();
+							vsMetadata["Instances"][instanceID] = jenova::json_t::object();
 							vsMetadata["Instances"][instanceID]["Name"] = vsInstance["displayName"].get<std::string>();
 							vsMetadata["Instances"][instanceID]["Version"] = vsInstance["catalog"]["buildVersion"].get<std::string>();
 							vsMetadata["Instances"][instanceID]["Product"] = vsInstance["catalog"]["productName"].get<std::string>();
@@ -2984,21 +2976,21 @@ namespace jenova
 				DisposeCompiler();
 
 				// Helper Functions
-				auto CreateJsonArrayFromString = [&](std::string input) -> nlohmann::json
+				auto CreateJsonArrayFromString = [&](std::string input) -> jenova::json_t
 					{
 						if (!input.empty() && input.back() == ';') input.pop_back();
 						std::stringstream ss(input);
 						std::string item;
 						std::vector<std::string> elements;
 						while (std::getline(ss, item, ';')) elements.push_back(item);
-						nlohmann::json jsonArray = elements;
+						jenova::json_t jsonArray = elements;
 						return jsonArray;
 					};
-				auto CreateJsonObjectFromDelimitedString = [&](const std::string& input, const char delimiter) -> nlohmann::json
+				auto CreateJsonObjectFromDelimitedString = [&](const std::string& input, const char delimiter) -> jenova::json_t
 					{
 						std::stringstream ss(input);
 						std::string item;
-						nlohmann::json jsonObject;
+						jenova::json_t jsonObject;
 						while (std::getline(ss, item, delimiter)) jsonObject[item] = true;
 						return jsonObject;
 					};
@@ -3007,8 +2999,8 @@ namespace jenova
 				try
 				{
 					// Create C++ Properties
-					nlohmann::json cppProperties, configuration;
-					nlohmann::json configurations = nlohmann::json::array();
+					jenova::json_t cppProperties, configuration;
+					jenova::json_t configurations = jenova::json_t::array();
 					configuration["name"] = "Jenova-Framework";
 					configuration["cStandard"] = "c17";
 					configuration["cppStandard"] = "c++20";
@@ -3017,7 +3009,7 @@ namespace jenova
 					configuration["forcedInclude"] = CreateJsonArrayFromString(forcedHeaders);
 					configuration["defines"] = CreateJsonArrayFromString(cpp_definitions);
 					configuration["intelliSenseMode"] = intelliSenseMode;
-					configuration["compilerArgs"] = nlohmann::json::array();
+					configuration["compilerArgs"] = jenova::json_t::array();
 
 					// Finalize C++ Properties
 					configurations.push_back(configuration);
@@ -3037,7 +3029,7 @@ namespace jenova
 					}
 
 					// Create VSCode Settings
-					nlohmann::json excludeConfig;
+					jenova::json_t excludeConfig;
 					std::string filesExclude = ".godot|.vs|.vscode|Jenova|*.cfg|*.tscn|*.scn|*.sln|*.vcxproj*|vc*.pdb|project.godot";
 					excludeConfig["files.exclude"] = CreateJsonObjectFromDelimitedString(filesExclude, '|');
 
@@ -3062,23 +3054,8 @@ namespace jenova
 						dialog->get_ok_button()->set_text("Open Visual Studio Code");
 						dialog->get_cancel_button()->set_text("No Thanks!");
 
-						// Define Internal UI Callback
-						class OnConfirmedEvent : public RefCounted
-						{
-						private:
-							JenovaEditorPlugin* pluginInstance;
-
-						public:
-							OnConfirmedEvent(JenovaEditorPlugin* _plugin) { pluginInstance = _plugin; }
-							void ProcessEvent()
-							{
-								pluginInstance->OpenProjectInVisualStudioCode();
-								memdelete(this);
-							}
-						};
-
 						// Create & Assign UI Callback to Dialog
-						dialog->connect("confirmed", callable_mp(memnew(OnConfirmedEvent(this)), &OnConfirmedEvent::ProcessEvent));
+						dialog->connect("confirmed", callable_mp(this, &JenovaEditorPlugin::OpenProjectInVisualStudioCode));
 						dialog->connect("confirmed", callable_mp((Node*)dialog, &ConfirmationDialog::queue_free));
 						dialog->connect("canceled", callable_mp((Node*)dialog, &ConfirmationDialog::queue_free));
 
@@ -3834,7 +3811,7 @@ namespace jenova
 		public:
 			void _setup_session(int32_t p_session_id) override
 			{
-				jenova::Output("_setup_session %d", p_session_id);
+				jenova::Verbose("_setup_session %d", p_session_id);
 				currentSessionID = p_session_id;
 			}
 			bool _has_capture(const String& p_capture) const override
@@ -4449,12 +4426,12 @@ namespace jenova
 							std::string configuration = program.get<std::string>("--configuration");
 
 							// Create Configuration
-							nlohmann::json jenovaConfiguration;
+							jenova::json_t jenovaConfiguration;
 
 							// Read And Parse Configuration
 							try
 							{
-								jenovaConfiguration = nlohmann::json::parse(jenova::CreateStdStringFromCompressedBase64(configuration));
+								jenovaConfiguration = jenova::json_t::parse(jenova::CreateStdStringFromCompressedBase64(configuration));
 								if (jenovaConfiguration.empty()) throw std::runtime_error("Invalid Jenova Configuration Data.");
 							}
 							catch (const std::exception&)
@@ -5303,6 +5280,7 @@ namespace jenova
 					std::istringstream errorStream(buffer);
 					std::string errorline;
 					while (std::getline(errorStream, errorline)) jenova::plugin::JenovaEditorPlugin::get_singleton()->call_deferred("VerboseLog", " [color=#f70f4d]  " + String(errorline.c_str()) + "[/color]");
+					SwitchToJenovaTerminalTab();
 					return;
 				}
 			}
@@ -5338,6 +5316,7 @@ namespace jenova
 					std::istringstream warningStream(buffer);
 					std::string warningline;
 					while (std::getline(warningStream, warningline)) jenova::plugin::JenovaEditorPlugin::get_singleton()->call_deferred("VerboseLog", " [color=#f7b90f]  " + String(warningline.c_str()) + "[/color]");
+					SwitchToJenovaTerminalTab();
 					return;
 				}
 			}
@@ -6258,7 +6237,7 @@ namespace jenova
 		try
 		{
 			// Create JSON Serializer
-			nlohmann::json serializer;
+			jenova::json_t serializer;
 
 			// Cache Script Modules Hashes
 			for (const auto& scriptModule : scriptModules)
@@ -7134,7 +7113,7 @@ namespace jenova
 						jenova::AddonConfig addonConfig;
 
 						// Parse Addon Config Data
-						nlohmann::json addonConfigParser = nlohmann::json::parse(addonConfigData);
+						jenova::json_t addonConfigParser = jenova::json_t::parse(addonConfigData);
 						addonConfig.Name = addonConfigParser["Addon Name"].get<std::string>();
 						addonConfig.Version = addonConfigParser["Addon Version"].get<std::string>();
 						addonConfig.License = addonConfigParser["Addon License"].get<std::string>();
@@ -7187,7 +7166,7 @@ namespace jenova
 						jenova::ToolConfig toolConfig;
 
 						// Parse Tool Config Data
-						nlohmann::json toolConfigParser = nlohmann::json::parse(toolConfigData);
+						jenova::json_t toolConfigParser = jenova::json_t::parse(toolConfigData);
 						toolConfig.Name = toolConfigParser["Tool Name"].get<std::string>();
 						toolConfig.Version = toolConfigParser["Tool Version"].get<std::string>();
 						toolConfig.License = toolConfigParser["Tool License"].get<std::string>();
@@ -7792,7 +7771,7 @@ namespace jenova
 	jenova::SerializedData ProcessAndExtractPropertiesFromScript(std::string& scriptSource, const std::string& scriptUID)
 	{
 		// Property Metadata Serializer
-		nlohmann::json propertiesMetadata;
+		jenova::json_t propertiesMetadata;
 
 		// Helpers
 		auto isCommented = [](const std::string& line)
@@ -7889,7 +7868,7 @@ namespace jenova
 				if (args.size() >= 3)
 				{
 					// Set Property Data
-					nlohmann::json propertyMetadata;
+					jenova::json_t propertyMetadata;
 					propertyMetadata["PropertyName"] = args[1];
 					propertyMetadata["PropertyType"] = args[0];
 					propertyMetadata["PropertyDefault"] = args[2];
@@ -8031,7 +8010,7 @@ namespace jenova
 		try
 		{
 			// Create Property Metadata Parser
-			nlohmann::json propertyMetadataParser = nlohmann::json::parse(propertyMetadata);
+			jenova::json_t propertyMetadataParser = jenova::json_t::parse(propertyMetadata);
 
 			// Create Property Container
 			jenova::ScriptPropertyContainer propertyContainer;
@@ -8750,7 +8729,7 @@ namespace jenova
 		try
 		{
 			// Create Runtime Configuration Serializer
-			nlohmann::json runtimeConfigurationSerializer;
+			jenova::json_t runtimeConfigurationSerializer;
 
 			// Serialize Runtime Configuartion
 			runtimeConfigurationSerializer["RuntimeType"] = std::string("Proprietary");
@@ -8765,10 +8744,10 @@ namespace jenova
 			// Serialize Addon Modules
 			jenova::InstalledAddons installedAddons = jenova::GetInstalledAddons();
 			runtimeConfigurationSerializer["AddonsNumber"] = installedAddons.size();
-			runtimeConfigurationSerializer["Addons"] = nlohmann::json::array();
+			runtimeConfigurationSerializer["Addons"] = jenova::json_t::array();
 			for (const auto& installedAddon : installedAddons)
 			{
-				runtimeConfigurationSerializer["Addons"].push_back(nlohmann::json::parse(installedAddon.Data));
+				runtimeConfigurationSerializer["Addons"].push_back(jenova::json_t::parse(installedAddon.Data));
 			}
 
 			// Serialize Runtime Configuration
@@ -8817,7 +8796,7 @@ namespace jenova
 		try
 		{
 			// Parse Runtime Configuration Data
-			nlohmann::json runtimeConfig = nlohmann::json::parse(runtimeConfigData);
+			jenova::json_t runtimeConfig = jenova::json_t::parse(runtimeConfigData);
 
 			// Get Addon Count
 			int addonCount = runtimeConfig["AddonsNumber"];
@@ -9096,6 +9075,125 @@ namespace jenova
 
 		// No Temporary Script Provided, No Need for Execution
 		return true;
+	}
+	String DownloadContentFromURLToString(const String& hostName, const String& fileURL, int targetPort)
+	{
+		// Create HTTPClient
+		Ref<HTTPClient> httpClient;
+		httpClient.instantiate();
+
+		// Timeout Configuration
+		static const int timeout_ms = 5000;
+		uint64_t start_time = Time::get_singleton()->get_ticks_msec();
+
+		// Connect and Download Content
+		if (httpClient->connect_to_host(hostName, targetPort, TLSOptions::client()) != OK) return String("");
+		while (httpClient->get_status() == HTTPClient::STATUS_CONNECTING || httpClient->get_status() == HTTPClient::STATUS_RESOLVING)
+		{
+			httpClient->poll();
+			if (Time::get_singleton()->get_ticks_msec() - start_time > timeout_ms) return String("");
+		}
+		if (httpClient->get_status() != HTTPClient::STATUS_CONNECTED) return String("");
+		godot::Error requestResult = httpClient->request(HTTPClient::METHOD_GET, fileURL, PackedStringArray());
+		if (requestResult != OK) return String("");
+		start_time = Time::get_singleton()->get_ticks_msec();
+		while (httpClient->get_status() == HTTPClient::STATUS_REQUESTING || httpClient->get_status() == HTTPClient::STATUS_CONNECTED)
+		{
+			httpClient->poll();
+			if (Time::get_singleton()->get_ticks_msec() - start_time > timeout_ms) return String("");
+		}
+		if (httpClient->get_response_code() != 200) return String("");
+		while (httpClient->get_status() != HTTPClient::STATUS_BODY && httpClient->get_status() != HTTPClient::STATUS_CONNECTION_ERROR 
+			&& httpClient->get_status() != HTTPClient::STATUS_DISCONNECTED) httpClient->poll();
+		String response_body;
+		while (httpClient->get_status() == HTTPClient::STATUS_BODY)
+		{
+			PackedByteArray chunk = httpClient->read_response_body_chunk();
+			if (!chunk.is_empty()) response_body += String::utf8(reinterpret_cast<const char*>(chunk.ptr()), chunk.size());
+			else break;
+		}
+		httpClient->close();
+
+		// Return Content
+		return response_body;
+	}
+	std::string DownloadContentFromURLToStdString(const std::string& hostName, const std::string& fileURL, int targetPort)
+	{
+		return AS_STD_STRING(DownloadContentFromURLToString(String(hostName.c_str()), String(fileURL.c_str()), targetPort));
+	}
+	jenova::json_t DownloadAndParseSerializedContentFromURL(const std::string& hostName, const std::string& fileURL, int targetPort)
+	{
+		try
+		{
+			return jenova::json_t::parse(jenova::DownloadContentFromURLToStdString(hostName, fileURL, targetPort));
+		}
+		catch (const std::exception& error)
+		{
+			return jenova::json_t{ {"Invalid", error.what()} };
+		}
+	}
+	void CheckForRuntimeUpdate()
+	{
+		// Verbose Update Check
+		jenova::Output("Checking for the Latest Release...");
+
+		// Download Release Metadata
+		jenova::json_t releaseMetadata = 
+			DownloadAndParseSerializedContentFromURL(jenova::GlobalSettings::JenovaReleaseMetadataURL, "/Jenova-Framework/J.E.N.O.V.A/main/ReleaseMetadata.json");
+
+		// Validate Release Metadata
+		if (releaseMetadata.contains("Invalid"))
+		{
+			jenova::Error("Jenova Updater", "Failed to Obtain Jenova Release Metadata. Confirm You Have an Active Internet Connection.");
+			return;
+		}
+
+		// Get Current Build Version
+		std::string currentVersion = jenova::Format("%s-%s", APP_VERSION, APP_VERSION_POSTFIX);
+		jenova::Output("[color=#97a6b0]Runtime Current Version :[/color] [color=#fa714b]%s[/color]", currentVersion.c_str());
+
+		// Get Latest Build Version
+		std::string latestVersion = releaseMetadata["LastStableRelease"];
+		jenova::Output("[color=#97a6b0]Runtime Latest Version :[/color] [color=#fcac44]%s[/color]", latestVersion.c_str());
+
+		// Compare Versions
+		if (currentVersion == latestVersion) 
+		/* User has the Latest Version */
+		{
+			// Verbose Version Check Result
+			jenova::OutputColored("#44fc4d", "You’re Using the Latest Official Release of Jenova Runtime.");
+		}
+		else 
+		/* There's New Version Available */
+		{
+			// Verbose Version Check Result
+			std::string updateTimestamp = jenova::FormatTimestampToStdString(releaseMetadata["ReleaseDate"]);
+			jenova::OutputColored("#fc4a44", "There's a New Update Available, Released at %s.", updateTimestamp.c_str());
+
+			// Open Release Page for the Latest Release
+			std::string latestReleasePageURL = jenova::Format("https://github.com/Jenova-Framework/J.E.N.O.V.A/releases/tag/v%s", latestVersion.c_str());
+			jenova::OpenURL(latestReleasePageURL.c_str());
+		}
+
+		// Switch to Terminal
+		SwitchToJenovaTerminalTab();
+	}
+	std::string FormatTimestampToStdString(time_t timestamp) 
+	{
+		std::tm timeInfo{};
+		#if defined(_WIN32) || defined(_WIN64)
+			localtime_s(&timeInfo, &timestamp);
+		#else
+			localtime_r(&timestamp, &timeInfo);
+		#endif
+		std::ostringstream oss;
+		oss << std::put_time(&timeInfo, "%Y/%m/%d %I:%M %p");
+		return oss.str();
+	}
+	void SwitchToJenovaTerminalTab()
+	{
+		if (!jenova::plugin::JenovaEditorPlugin::get_singleton()) return;
+		jenova::plugin::JenovaEditorPlugin::get_singleton()->SwitchToTerminal();
 	}
 	#pragma endregion
 	
