@@ -60,6 +60,13 @@
 // Namespaces
 using namespace std;
 
+// Import External Functions
+namespace jenova
+{
+	extern void Error(const char* stageName, const char* fmt, ...);
+	extern int ShowMessageBox(const char* msg, const char* title, int flags);
+};
+
 // Internal Structs
 struct NodeBackup
 {
@@ -106,6 +113,44 @@ static void CollectNodesByClassName(godot::Node* node, const godot::String& clas
 	{
 		CollectNodesByClassName(node->get_child(i), class_name, result);
 	}
+}
+static bool OverrideClassAPIType(const godot::StringName& className, godot::ClassDB::APIType apiType)
+{
+	// Check If Engine Build Support API Override Feature
+	if (godot::ClassDBSingleton::get_singleton()->has_method("class_override_api_type"))
+	{
+		auto result = godot::ClassDBSingleton::get_singleton()->call("class_override_api_type", className, godot::ClassDBSingleton::APIType(apiType));
+		if (godot::Error(int(result)) != godot::Error::OK)
+		{
+			jenova::Error("Sakura", "Failed to Override API of Class '%s'", jenova::sdk::GetCStr(className));
+			return false;
+		};
+
+		// All Good
+		return true;
+	}
+	else
+	{
+		// Warn User About Lack of Nested Extensions Runtime Hot-Reload Capability
+		jenova::ShowMessageBox("You are attempting to Hot-Reload runtime with Nested Extensions and "
+			"your engine build does not contain the required feature.\n\n"
+			"To use this feature you need a compatible build.\n\n"
+			"Blazium, Lithium IDE and Redot support this feature.\n", "Warning", 0x00000030L);
+
+		// Failed
+		return false;
+	}
+
+	// For Future Use This Code
+	/*if (ClassDB::class_override_api_type(className, ClassDBSingleton::API_EXTENSION) != godot::Error::OK)
+	{
+		jenova::Error("Sakura", "Failed to Override API of Class '%s'", AS_C_STRING(className));
+		return false;
+	};
+
+	// All Good
+	return true;
+	*/
 }
 
 // System SDK Implementation
@@ -449,6 +494,9 @@ namespace jenova::sdk
 		// Validate Scene Tree [Required!]
 		if (!GetTree()) return;
 
+		// Override Nested Node Class API Type
+		OverrideClassAPIType(className, ClassDB::APIType::API_EXTENSION);
+
 		// Deselect Nodes
 		if (IsEditor()) godot::EditorInterface::get_singleton()->get_selection()->clear();
 
@@ -478,10 +526,10 @@ namespace jenova::sdk
 				{
 					// Warn User About Lack of Multiple Scenes Hot-Reload Capability
 					ShowMessageBox("You are attempting to Hot-Reload multiple opened scenes and "
-						"your engine build does not contain the required feature (ask Godot lazy devs why)\n\n"
+						"your engine build does not contain the required feature.\n\n"
 						"To use this feature you need a compatible build, "
 						"If you have any nested nodes in your other opened scene, It will lead to a crash when switching to them.\n\n"
-						"Godot Jenova Edition, Blazium, Lithium IDE and Redot support this feature.\n", "Warning", 0x00000030L);
+						"Godot 4.5+, Godot Jenova Edition, Blazium, Lithium IDE and Redot support this feature.\n", "Warning", 0x00000030L);
 
 					// Fallback to Active Scene
 					openedScenes.push_back(GetTree()->get_root());
@@ -544,6 +592,9 @@ namespace jenova::sdk
 
 		// Validate
 		if (!godot::ClassDB::class_exists(className)) return;
+
+		// Override Nested Node Class API Type
+		OverrideClassAPIType(className, ClassDB::APIType::API_EXTENSION);
 
 		// Create Class Name
 		godot::String backupClassName(className);
