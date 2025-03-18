@@ -63,7 +63,9 @@ using namespace std;
 // Import External Functions
 namespace jenova
 {
+	extern void Alert(const char* fmt, ...);
 	extern void Error(const char* stageName, const char* fmt, ...);
+	extern void Warning(const char* stageName, const char* fmt, ...);
 	extern int ShowMessageBox(const char* msg, const char* title, int flags);
 };
 
@@ -116,6 +118,9 @@ static void CollectNodesByClassName(godot::Node* node, const godot::String& clas
 }
 static bool OverrideClassAPIType(const godot::StringName& className, godot::ClassDB::APIType apiType)
 {
+	// Validate Class
+	if (!godot::ClassDB::class_exists(className)) return true;
+
 	// Check If Engine Build Support API Override Feature
 	if (godot::ClassDBSingleton::get_singleton()->has_method("class_override_api_type"))
 	{
@@ -151,6 +156,18 @@ static bool OverrideClassAPIType(const godot::StringName& className, godot::Clas
 	// All Good
 	return true;
 	*/
+}
+static godot::TypedArray<godot::Node> GetOpenedScenes()
+{
+	if (godot::EditorInterface::get_singleton()->has_method("get_open_scene_roots"))
+	{
+		return godot::TypedArray<godot::Node>(godot::EditorInterface::get_singleton()->call("get_open_scene_roots"));
+	}
+	if (godot::EditorInterface::get_singleton()->has_method("get_open_scenes_roots")) 
+	{
+		return godot::TypedArray<godot::Node>(godot::EditorInterface::get_singleton()->call("get_open_scenes_roots"));
+	}
+	return godot::TypedArray<godot::Node>();
 }
 
 // System SDK Implementation
@@ -473,13 +490,9 @@ namespace jenova::sdk
 	// Hot-Reloading Utilities (Sakura)
 	bool JenovaSDK::SupportsReload()
 	{
-		#if GODOT_VERSION_MAJOR == 4 && GODOT_VERSION_MINOR >= 4
-			if (IsEditor()) return godot::EditorInterface::get_singleton()->has_method("get_open_scene_roots");
-		#else
-			if (IsEditor()) return godot::EditorInterface::get_singleton()->has_method("get_open_scenes_roots");
-		#endif
-		
-		return true;
+		if (IsEditor()) { if (godot::EditorInterface::get_singleton()->has_method("get_open_scene_roots")) return true; }
+		if (IsEditor()) { if (godot::EditorInterface::get_singleton()->has_method("get_open_scenes_roots")) return true; }
+		return false;
 	}
 	void JenovaSDK::PrepareReload(const godot::String& className)
 	{
@@ -501,7 +514,7 @@ namespace jenova::sdk
 		if (IsEditor()) godot::EditorInterface::get_singleton()->get_selection()->clear();
 
 		// Collect Opened Scenes
-		godot::TypedArray<Node> openedScenes;
+		godot::TypedArray<godot::Node> openedScenes;
 		if (IsEditor()) 
 		{
 			// Validate Hot-Reloading
@@ -516,11 +529,7 @@ namespace jenova::sdk
 				// Multiple Scenes Are Open in Editor, Collect Opened Scenes If Supported
 				if (sakura::SupportsReload())
 				{
-					#if GODOT_VERSION_MAJOR == 4 && GODOT_VERSION_MINOR >= 4
-						openedScenes = godot::TypedArray<Node>(godot::EditorInterface::get_singleton()->call("get_open_scene_roots"));
-					#else
-						openedScenes = godot::TypedArray<Node>(godot::EditorInterface::get_singleton()->call("get_open_scenes_roots"));
-					#endif
+					openedScenes = GetOpenedScenes();
 				}
 				else
 				{
