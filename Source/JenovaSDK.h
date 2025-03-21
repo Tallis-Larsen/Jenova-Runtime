@@ -135,6 +135,14 @@ namespace jenova::sdk
 		PhysicsProcess,
 		ReceivedDebuggerMessage
 	};
+	enum class ClassAccess 
+	{
+		Core,
+		Editor,
+		Extension,
+		Editor_Extension,
+		None
+	};
 
 	// Type Definitions
 	typedef void*						FunctionPtr;

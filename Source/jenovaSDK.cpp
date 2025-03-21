@@ -116,15 +116,15 @@ static void CollectNodesByClassName(godot::Node* node, const godot::String& clas
 		CollectNodesByClassName(node->get_child(i), class_name, result);
 	}
 }
-static bool OverrideClassAPIType(const godot::StringName& className, godot::ClassDB::APIType apiType)
+static bool OverrideClassAPIType(const godot::StringName& className, jenova::sdk::ClassAccess apiType)
 {
 	// Validate Class
-	if (!godot::ClassDB::class_exists(className)) return true;
+	if (!godot::ClassDB::class_exists(className)) return true; 
 
 	// Check If Engine Build Support API Override Feature
 	if (godot::ClassDBSingleton::get_singleton()->has_method("class_override_api_type"))
 	{
-		auto result = godot::ClassDBSingleton::get_singleton()->call("class_override_api_type", className, godot::ClassDBSingleton::APIType(apiType));
+		auto result = godot::ClassDBSingleton::get_singleton()->call("class_override_api_type", className, int(apiType));
 		if (godot::Error(int(result)) != godot::Error::OK)
 		{
 			jenova::Error("Sakura", "Failed to Override API of Class '%s'", jenova::sdk::GetCStr(className));
@@ -508,7 +508,7 @@ namespace jenova::sdk
 		if (!GetTree()) return;
 
 		// Override Nested Node Class API Type
-		OverrideClassAPIType(className, ClassDB::APIType::API_EXTENSION);
+		OverrideClassAPIType(className, jenova::sdk::ClassAccess::Extension);
 
 		// Deselect Nodes
 		if (IsEditor()) godot::EditorInterface::get_singleton()->get_selection()->clear();
@@ -603,7 +603,7 @@ namespace jenova::sdk
 		if (!godot::ClassDB::class_exists(className)) return;
 
 		// Override Nested Node Class API Type
-		OverrideClassAPIType(className, ClassDB::APIType::API_EXTENSION);
+		OverrideClassAPIType(className, jenova::sdk::ClassAccess::Extension);
 
 		// Create Class Name
 		godot::String backupClassName(className);
