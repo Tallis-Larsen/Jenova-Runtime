@@ -365,6 +365,7 @@ def build_dependencies_linux(buildMode, cacheDir):
     # Build Archive
     if not os.path.exists("./Libs/libarchive-static-x86_64.a"):
         buildPath = cacheDir + "/Dependencies/archive"
+        lzmaInclude = os.path.abspath('./Dependencies/liblzma/src/liblzma/api');
         if os.path.exists(buildPath): shutil.rmtree(buildPath)
         subprocess.run([
             "cmake",
@@ -382,7 +383,8 @@ def build_dependencies_linux(buildMode, cacheDir):
             "-DENABLE_CPIO=OFF",
             "-DENABLE_EXPAT=OFF",
             "-DENABLE_BZip2=OFF",
-            "-DENABLE_TEST=OFF"
+            "-DENABLE_TEST=OFF",
+            f"-DCMAKE_C_FLAGS={os.environ['CFLAGS'] + ' -DLZMA_API_STATIC ' + f'-I{guard_path(lzmaInclude)}'}"
         ], check=True)
         build_with_ninja(buildPath)
         shutil.copyfile(buildPath + "/libarchive/libarchive.a", "./Libs/libarchive-static-x86_64.a")
@@ -757,7 +759,7 @@ def build_dependencies_windows(buildMode, cacheDir):
                 "-DENABLE_CPIO=OFF",
                 "-DENABLE_EXPAT=OFF",
                 "-DENABLE_BZip2=OFF",
-                "-DENABLE_TEST=OFF"
+                "-DENABLE_TEST=OFF",
                 "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded",
                 f"-DCMAKE_C_FLAGS={os.environ['CLFLAGS'] + ' -DLZMA_API_STATIC ' + f'/I{guard_path(lzmaInclude)}'}"
             ], check=True)
@@ -962,7 +964,7 @@ def build_dependencies_windows(buildMode, cacheDir):
                 "-DENABLE_CPIO=OFF",
                 "-DENABLE_EXPAT=OFF",
                 "-DENABLE_BZip2=OFF",
-                "-DENABLE_TEST=OFF"
+                "-DENABLE_TEST=OFF",
                 f"-DCMAKE_C_FLAGS={os.environ['CFLAGS'] + ' -DLZMA_API_STATIC ' + f'-I{guard_path(lzmaInclude)}'}"
             ], check=True)
             build_with_ninja(buildPath)
