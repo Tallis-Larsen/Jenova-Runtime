@@ -172,6 +172,7 @@ namespace jenova
 				ClassDB::bind_method(D_METHOD("BuildProject"), &JenovaEditorPlugin::BuildProject);
 				ClassDB::bind_method(D_METHOD("CleanProject"), &JenovaEditorPlugin::CleanProject);
 				ClassDB::bind_method(D_METHOD("BootstrapModule"), &JenovaEditorPlugin::BootstrapModule);
+				ClassDB::bind_method(D_METHOD("SwitchToTerminal"), &JenovaEditorPlugin::SwitchToTerminal);
 				ClassDB::bind_method(D_METHOD("VerboseLog"), &JenovaEditorPlugin::VerboseLog);
 				ClassDB::bind_method(D_METHOD("ClearLogs"), &JenovaEditorPlugin::ClearLogs);
 			}
@@ -4747,7 +4748,7 @@ namespace jenova
 	{
 		// Windows Implementation
 		#ifdef TARGET_PLATFORM_WINDOWS
-			return MessageBoxA(HWND(GetMainWindowNativeHandle()), msg, title, flags);
+			return MessageBoxA(GetActiveWindow(), msg, title, flags);
 		#endif
 
 		// Linux Implementation
@@ -9193,7 +9194,7 @@ namespace jenova
 	void SwitchToJenovaTerminalTab()
 	{
 		if (!jenova::plugin::JenovaEditorPlugin::get_singleton()) return;
-		jenova::plugin::JenovaEditorPlugin::get_singleton()->SwitchToTerminal();
+		jenova::plugin::JenovaEditorPlugin::get_singleton()->call_deferred("SwitchToTerminal");
 	}
 	#pragma endregion
 	

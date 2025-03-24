@@ -140,7 +140,7 @@ static bool OverrideClassAPIType(const godot::StringName& className, jenova::sdk
 		jenova::ShowMessageBox("You are attempting to Hot-Reload runtime with Nested Extensions and "
 			"your engine build does not contain the required feature.\n\n"
 			"To use this feature you need a compatible build.\n\n"
-			"Blazium, Lithium IDE and Redot support this feature.\n", "Warning", 0x00000030L);
+			"Godot Jenova Edition, Blazium and Lithium IDE support this feature.\n", "Warning", 0x00000030L);
 
 		// Failed
 		return false;

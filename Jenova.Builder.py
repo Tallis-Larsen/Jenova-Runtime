@@ -115,7 +115,7 @@ def get_toolchain_name(buildMode):
     if buildMode == "linux-clang": return "llvm"
     if buildMode == "linux-gcc": return "gnu"
 def print_banner():
-    banner = """
+    banner = r"""
 ===========================================================================
        _________   ______ _    _____       ____        _ __    __         
       / / ____/ | / / __ \ |  / /   |     / __ )__  __(_) /___/ /__  _____
@@ -128,7 +128,7 @@ def print_banner():
 ===========================================================================
     """
     rgb_print("#42f569", banner)
-    rgb_print("#2942ff", f".:: Jenova Build System v2.3 ::.\n")
+    rgb_print("#2942ff", f".:: Jenova Build System v2.4 ::.\n")
 def get_compiler_choice():
     global compiler, linker
     rgb_print("#ff2474", "[ ? ] Select Supported Compiler :\n")
@@ -339,6 +339,7 @@ def build_dependencies_linux(buildMode, cacheDir):
             "-G", "Ninja",
             "-DCMAKE_BUILD_TYPE=MinSizeRel",
             "-DBUILD_SHARED_LIBS=OFF",
+            "-DCURL_BROTLI=OFF",
             "-DCURL_USE_LIBPSL=OFF"
         ], check=True)
         build_with_ninja(buildPath)
@@ -373,6 +374,13 @@ def build_dependencies_linux(buildMode, cacheDir):
             "-DCMAKE_BUILD_TYPE=MinSizeRel",
             "-DBUILD_SHARED_LIBS=OFF",
             "-DENABLE_LZMA=ON",
+            "-DHAVE_LZMA_H=ON",
+            "-DBUILD_TESTING=OFF",
+            "-DENABLE_TEST=OFF",
+            "-DENABLE_TAR=OFF",
+            "-DENABLE_CAT=OFF",
+            "-DENABLE_CPIO=OFF",
+            "-DENABLE_EXPAT=OFF",
             "-DENABLE_BZip2=OFF",
             "-DENABLE_TEST=OFF"
         ], check=True)
@@ -747,6 +755,9 @@ def build_dependencies_windows(buildMode, cacheDir):
                 "-DENABLE_TAR=OFF",
                 "-DENABLE_CAT=OFF",
                 "-DENABLE_CPIO=OFF",
+                "-DENABLE_EXPAT=OFF",
+                "-DENABLE_BZip2=OFF",
+                "-DENABLE_TEST=OFF"
                 "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded",
                 f"-DCMAKE_C_FLAGS={os.environ['CLFLAGS'] + ' -DLZMA_API_STATIC ' + f'/I{guard_path(lzmaInclude)}'}"
             ], check=True)
@@ -949,6 +960,9 @@ def build_dependencies_windows(buildMode, cacheDir):
                 "-DENABLE_TAR=OFF",
                 "-DENABLE_CAT=OFF",
                 "-DENABLE_CPIO=OFF",
+                "-DENABLE_EXPAT=OFF",
+                "-DENABLE_BZip2=OFF",
+                "-DENABLE_TEST=OFF"
                 f"-DCMAKE_C_FLAGS={os.environ['CFLAGS'] + ' -DLZMA_API_STATIC ' + f'-I{guard_path(lzmaInclude)}'}"
             ], check=True)
             build_with_ninja(buildPath)
@@ -1344,7 +1358,7 @@ if __name__ == "__main__":
     os.environ['PYTHONDONTWRITEBYTECODE'] = "1"
 
     # Create Arguments Parser
-    parser = argparse.ArgumentParser(description="Jenova Runtime Build System 2.3 Developed by Hamid.Memar")
+    parser = argparse.ArgumentParser(description="Jenova Runtime Build System 2.4 Developed by Hamid.Memar")
     parser.add_argument('--compiler', type=str, help='Specify Compiler to Use.')
     parser.add_argument('--deploy-mode', action='store_true', help='Run As GitHub Action Deploy Mode')
     parser.add_argument('--deps-version', default="4.3", help='Specify Dependencies Version (default: 4.3)')
