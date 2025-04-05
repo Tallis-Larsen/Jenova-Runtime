@@ -3471,6 +3471,14 @@ namespace jenova
 				// Get Scale Factor
 				double scaleFactor = EditorInterface::get_singleton()->get_editor_scale();
 
+				// Get Editor Theme
+				Ref<Theme> editor_theme = EditorInterface::get_singleton()->get_editor_theme();
+				if (!editor_theme.is_valid())
+				{
+					jenova::Error("Jenova About Window", "Failed to Obtain Engine Theme.");
+					return;
+				}
+
 				// Create Window
 				Window* jenva_about_window = memnew(Window);
 				jenva_about_window->set_title("About Projekt Jenova");
@@ -3496,7 +3504,7 @@ namespace jenova
 				background->set_anchors_preset(Control::PRESET_FULL_RECT);
 				background->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 				background->set_v_size_flags(Control::SIZE_EXPAND_FILL);
-				background->set_color(Color(0.0666667, 0.0666667, 0.105882, 1));
+				background->set_color(editor_theme->get_color("dark_color_3", "Editor"));
 				jenova_about_ui->add_child(background);
 
 				// Add AboutImage TextureRect (using a placeholder for now)
@@ -3515,57 +3523,54 @@ namespace jenova
 				// Add Title Label
 				Label* title = memnew(Label);
 				title->set_name("Title");
-				title->set_offset(Side::SIDE_LEFT, SCALED(323.0));
+				title->set_offset(Side::SIDE_LEFT, SCALED(320.0));
 				title->set_offset(Side::SIDE_TOP, SCALED(20.0));
-				title->set_offset(Side::SIDE_RIGHT, SCALED(665.0));
+				title->set_offset(Side::SIDE_RIGHT, SCALED(660.0));
 				title->set_offset(Side::SIDE_BOTTOM, SCALED(77.0));
-				title->add_theme_color_override("font_color", Color(0.0820475, 0.763784, 0.615328, 1));
+				title->add_theme_color_override("font_color", editor_theme->get_color("accent_color", "Editor"));
 				title->add_theme_font_size_override("font_size", SCALED(35));
 				title->set_text("Projekt J.E.N.O.V.A");
 				jenova_about_ui->add_child(title);
-
-				// Add Description Label
-				Label* description = memnew(Label);
-				description->set_name("Description");
-				description->set_offset(Side::SIDE_LEFT, SCALED(327.0));
-				description->set_offset(Side::SIDE_TOP, SCALED(130.0));
-				description->set_offset(Side::SIDE_RIGHT, SCALED(733.0));
-				description->set_offset(Side::SIDE_BOTTOM, SCALED(450.0));
-				description->add_theme_color_override("font_color", Color(1, 1, 1, 0.533333));
-				description->set_text(
-					"Projekt J.E.N.O.V.A is a series of components for the Godot 4 Game Engine "
-					"that brings fully-featured C++ scripting directly into the Godot Editor. "
-					"It allows the use of modern C++20 standards within the Godot Engine, similar to GDScript.\n\n"
-					"With Projekt J.E.N.O.V.A, there are no limits.\n"
-					"You can create anything! From Desktop Software to AAA Quality Games. "
-					"It's a full toolset with all the features C++ compilers provide.\n\n"
-					"For More Information Visit Official Website:\n"
-				);
-				description->set_autowrap_mode(TextServer::AUTOWRAP_WORD);
-				#if GODOT_VERSION_MAJOR == 4 && GODOT_VERSION_MINOR >= 4
-					description->add_theme_font_size_override("font_size", SCALED(15));
-				#else
-					description->add_theme_font_size_override("font_size", SCALED(16));
-				#endif
-				jenova_about_ui->add_child(description);
 
 				// Add Version Label
 				RichTextLabel* version = memnew(RichTextLabel);
 				version->set_use_bbcode(true);
 				version->set_name("Version");
-				version->set_offset(Side::SIDE_LEFT, SCALED(327.0));
+				version->set_offset(Side::SIDE_LEFT, SCALED(322.0));
 				version->set_offset(Side::SIDE_TOP, SCALED(73.0));
 				version->set_offset(Side::SIDE_RIGHT, SCALED(724.0));
 				version->set_offset(Side::SIDE_BOTTOM, SCALED(120.0));
-				version->append_text(" Version " + String(APP_VERSION) + " (" + String(APP_VERSION_POSTFIX) + "/" + 
+				version->append_text(" Version " + String(APP_VERSION) + " (" + String(APP_VERSION_POSTFIX) + "/" +
 					String(APP_VERSION_NAME) + ") Build " + String(APP_VERSION_BUILD) + String(jenova::Format(" [font_size=%lf]\n [/font_size]", SCALED(14)).c_str()) +
 					String(jenova::Format("[font_size=%lf][color=#7c889c]", SCALED(10)).c_str()) + String(jenova::GetRuntimeCompilerName().c_str()) +
-					"[/color] [color=#40c27f]/[/color] [color=#585875]" + __TIMESTAMP__ + "[/color][/font_size]");
+					"[/color] [color=" + editor_theme->get_color("accent_color", "Editor").to_html() + "]/[/color] [color=#585875]" + __TIMESTAMP__ + "[/color][/font_size]");
 				version->set_autowrap_mode(TextServer::AUTOWRAP_OFF);
 				version->set_theme(nullptr);
 				version->add_theme_stylebox_override("normal", memnew(StyleBoxEmpty));
 				version->add_theme_font_size_override("font_size", SCALED(15));
 				jenova_about_ui->add_child(version);
+
+				// Add Description Label
+				Label* description = memnew(Label);
+				description->set_name("Description");
+				description->set_offset(Side::SIDE_LEFT, SCALED(322.0));
+				description->set_offset(Side::SIDE_TOP, SCALED(120.0));
+				description->set_offset(Side::SIDE_RIGHT, SCALED(740.0));
+				description->set_offset(Side::SIDE_BOTTOM, SCALED(450.0));
+				description->add_theme_color_override("font_color", Color(1, 1, 1, 0.53));
+				description->set_text(
+					"Projekt J.E.N.O.V.A is a series of components for the Godot 4 Game Engine "
+					"that brings fully-featured C++ scripting directly into the Godot Editor. "
+					"It allows the use of modern C++20 standards within the Godot Engine, similar to GDScript.\n\n"
+					"With Projekt J.E.N.O.V.A, You can create anything!\nFrom Desktop Software to AAA Quality Games. \n"
+					"It's a full toolset with all the features C++ compilers provide.\n\n"
+					"For More Information Visit Official Website:\n"
+				);
+				description->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
+				description->add_theme_font_size_override("font_size", SCALED(16));
+				jenova::Output("Line Space : %lf", SCALED(3));
+				description->add_theme_constant_override("line_spacing", SCALED(3));
+				jenova_about_ui->add_child(description);
 
 				// Add Author Label
 				Label* author = memnew(Label);
@@ -3581,7 +3586,7 @@ namespace jenova
 				author->set_offset(Side::SIDE_BOTTOM, SCALED(-42.0));
 				author->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 				author->set_v_size_flags(Control::SIZE_SHRINK_BEGIN);
-				author->add_theme_color_override("font_color", Color(0.00392157, 0.768627, 0.627451, 1));
+				author->add_theme_color_override("font_color", editor_theme->get_color("accent_color", "Editor"));
 				author->set_text("Developed & Designed By Hamid.Memar");
 				author->set_autowrap_mode(TextServer::AUTOWRAP_WORD);
 				jenova_about_ui->add_child(author);

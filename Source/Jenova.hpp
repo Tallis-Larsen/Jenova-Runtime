@@ -298,7 +298,7 @@ using namespace godot;
 #define QUERY_ENGINE_MODE(mode)				(jenova::GlobalStorage::CurrentEngineMode == jenova::EngineMode::mode)
 #define QUERY_SDK_LINKING_MODE(mode)		(jenova::GlobalStorage::SDKLinkingMode == jenova::SDKLinkingMode::mode)
 #define QUERY_PLATFORM(platform)			(TARGET_PLATFORM_CURRENT == jenova::TargetPlatform::platform)
-#define SCALED(value)						(value * scaleFactor)
+#define SCALED(value)						((double)value * (double)scaleFactor)
 
 // Helper Markers
 #define InParam
