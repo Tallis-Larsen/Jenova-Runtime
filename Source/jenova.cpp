@@ -26,7 +26,6 @@
 // Internal/Built-In Sources
 #include "InternalSources.h"
 #include "InternalModules.h"
-#include "CodeTemplates.h"
 
 // Internal/Built-In Templates
 #include "VisualStudioTemplates.h"
@@ -226,7 +225,7 @@ namespace jenova
 				VALIDATE_FUNCTION(RegisterDebuggerPlugins());
 
 				// Register Built-In Script Templates
-				VALIDATE_FUNCTION(RegisterBuiltInScriptTemplates());
+				VALIDATE_FUNCTION(RegisterScriptTemplates());
 
 				// Initialize Custom Types Icons
 				VALIDATE_FUNCTION(InitialzeClassesIcons());
@@ -599,8 +598,9 @@ namespace jenova
 						editor_settings->set_initial_value(ManagedSafeExecutionConfigPath, true, false);
 
 						// Build Tool Button Placement Property
-						PropertyInfo BuildToolButtonPlacementProperty(Variant::INT, BuildToolButtonEditorConfigPath, 
-							PropertyHint::PROPERTY_HINT_ENUM, "Before Main Menu,After Main Menu,Before Stage Selector,After Stage Selector,Before Run Bar,After Run Bar,After Render Method",
+						String buttonPlacements = "Before Main Menu,After Main Menu,Before Stage Selector,After Stage Selector,Before Run Bar,After Run Bar,After Render Method";
+						if (jenova::IsEngineBlazium()) buttonPlacements = "Blazium Default";
+						PropertyInfo BuildToolButtonPlacementProperty(Variant::INT, BuildToolButtonEditorConfigPath, PropertyHint::PROPERTY_HINT_ENUM, buttonPlacements,
 							PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_RESTART_IF_CHANGED, JenovaEditorSettingsCategory);
 						editor_settings->add_property_info(BuildToolButtonPlacementProperty);
 						editor_settings->set_initial_value(BuildToolButtonEditorConfigPath, int32_t(BuildToolButtonDefaultPlacement), false);
@@ -710,7 +710,8 @@ namespace jenova
 				if (!GetEditorSetting(BuildToolButtonEditorConfigPath, BuildToolButtonPlacement)) BuildToolButtonPlacement = int32_t(BuildToolButtonDefaultPlacement);
 
 				// Move the button to the desired position
-				buildToolButton->get_parent()->move_child(buildToolButton, BuildToolButtonPlacement);
+				if (!jenova::IsEngineBlazium()) buildToolButton->get_parent()->move_child(buildToolButton, BuildToolButtonPlacement);
+				else buildToolButton->get_parent()->move_child(buildToolButton, 1);
 
 				// All Good
 				return true;
@@ -846,6 +847,7 @@ namespace jenova
 				jenovaMenu->add_separator();
 				jenovaMenu->add_shortcut(CreateShortcut("  Export to Visual Studio...  ", Key(KEY_MASK_CTRL | KEY_MASK_SHIFT | KEY_E)), EDITOR_MENU_ID(ExportToVisualStudio));
 				jenovaMenu->add_shortcut(CreateShortcut("  Export to Visual Studio Code...  ", Key(KEY_MASK_ALT | KEY_MASK_SHIFT | KEY_E)), EDITOR_MENU_ID(ExportToVisualStudioCode));
+				jenovaMenu->add_shortcut(CreateShortcut("  Export to Neovim...  ", Key(KEY_MASK_ALT | KEY_MASK_SHIFT | KEY_N)), EDITOR_MENU_ID(ExportToNeovim));
 				jenovaMenu->add_item("  Export Jenova Module...  ", EDITOR_MENU_ID(ExportJenovaModule));
 				jenovaMenu->add_separator();
 
@@ -862,6 +864,7 @@ namespace jenova
 				toolsMenu->add_item("  Backup Current Encryption Key...  ", EDITOR_MENU_ID(BackupCurrentEncryptionKey));
 				toolsMenu->add_separator();
 				toolsMenu->add_item("  Reload Script Documentation  ", EDITOR_MENU_ID(ReloadScriptDocumentation));
+				toolsMenu->add_item("  Reload Script Templates  ", EDITOR_MENU_ID(ReloadScriptTemplates));
 				toolsMenu->add_separator();
 				toolsMenu->add_item("  Open Addon Explorer...  ", EDITOR_MENU_ID(OpenAddonExplorer));
 				toolsMenu->add_separator();
@@ -884,6 +887,7 @@ namespace jenova
 				auto jenovaIcon = CREATE_PNG_MENU_ICON(JENOVA_RESOURCE(PNG_JENOVA_ICON_64));
 				auto vsIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_VISUAL_STUDIO_ICON));
 				auto vsCodeIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_VISUAL_STUDIO_CODE_ICON));
+				auto neovimIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_NEOVIM_ICON));
 				auto codeTealIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_CODEBLOCK_TEAL_ICON));
 				auto codeRedIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_CODEBLOCK_RED_ICON));
 				auto discordIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_DISCORD_ICON));
@@ -898,6 +902,7 @@ namespace jenova
 				auto configureIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_CONFIGURE_ICON));
 				auto puzzleIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_PUZZLE_ICON));
 				auto bookIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_BOOK_ICON));
+				auto reloadIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_TEMPLATE_RELOAD_ICON));
 
 				// Set Menu Icons
 				jenovaMenu->set_item_icon(jenovaMenu->get_item_index(EDITOR_MENU_ID(BuildSolution)), jenova::GetEditorIcon("PluginScript"));
@@ -906,6 +911,7 @@ namespace jenova
 				jenovaMenu->set_item_icon(jenovaMenu->get_item_index(EDITOR_MENU_ID(ConfigureBuild)), configureIcon);
 				jenovaMenu->set_item_icon(jenovaMenu->get_item_index(EDITOR_MENU_ID(ExportToVisualStudio)), vsIcon);
 				jenovaMenu->set_item_icon(jenovaMenu->get_item_index(EDITOR_MENU_ID(ExportToVisualStudioCode)), vsCodeIcon);
+				jenovaMenu->set_item_icon(jenovaMenu->get_item_index(EDITOR_MENU_ID(ExportToNeovim)), neovimIcon);
 				jenovaMenu->set_item_icon(jenovaMenu->get_item_index(EDITOR_MENU_ID(ExportJenovaModule)), lightningIcon);
 				jenovaMenu->set_item_icon(jenovaMenu->get_item_index(EDITOR_MENU_ID(DeveloperMode)), jenova::GlobalSettings::VerboseEnabled ? codeTealIcon : codeRedIcon);
 				jenovaMenu->set_item_icon(jenovaMenu->get_item_index(EDITOR_MENU_ID(DiscordServer)), discordIcon);
@@ -916,6 +922,7 @@ namespace jenova
 				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(GenerateEncryptionKey)), keyTealIcon);
 				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(BackupCurrentEncryptionKey)), keyMaroonIcon);
 				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(ReloadScriptDocumentation)), bookIcon);
+				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(ReloadScriptTemplates)), reloadIcon);
 				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(OpenAddonExplorer)), puzzleIcon);
 				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(OpenScriptManager)), compilerIcon);
 				toolsMenu->set_item_icon(toolsMenu->get_item_index(EDITOR_MENU_ID(OpenPackageManager)), packageIcon);
@@ -970,24 +977,17 @@ namespace jenova
 				// All Good
 				return true;
 			}
-			bool RegisterBuiltInScriptTemplates()
+			bool RegisterScriptTemplates()
 			{
-				// Register Global Script Templates
-				CREATE_GLOBAL_TEMPLATE("Default", CODE_TEMPLATE_DEFAULT, "Base C++ Script");
-				CREATE_GLOBAL_TEMPLATE("Boot", CODE_TEMPLATE_BOOT, "Module Boot/Entrypoint");
-				CREATE_GLOBAL_TEMPLATE("Export", CODE_TEMPLATE_EXPORT, "Export Functions");
+				// Install Script Templates
+				if (!jenova::InstallBuiltInScriptTemplates())
+				{
+					jenova::Warning("Jenova Template Manager", "Failed to Install Built-in Script Templates.");
+					return false;
+				}
 
-				// Register Node Script Templates
-				CREATE_CLASS_TEMPLATE("Node Base", "Node", CODE_TEMPLATE_NODE_BASE, "Base Node Script");
-
-				// Register Control Script Templates
-				CREATE_CLASS_TEMPLATE("Control Base", "Control", CODE_TEMPLATE_CONTROL_BASE, "Base Control Script");
-
-				// Register Label Script Templates
-				CREATE_CLASS_TEMPLATE("Label FPS Visualizer", "Label", CODE_TEMPLATE_LABEL_FPS, "Display FPS On Label");
-
-				// All Good
-				return true;
+				// Register Script Templates
+				return jenova::UpdateScriptTemplates();
 			}
 			bool RegisterEditorTerminalPanel()
 			{
@@ -1152,6 +1152,9 @@ namespace jenova
 				case jenova::EditorMenuID::ExportToVisualStudioCode:
 					if (!ExportVisualStudioCodeProject()) jenova::Error("Jenova Visual Studio Code Exporter", "Failed to Export Jenova Solution to Visual Studio Code.");
 					break;
+				case jenova::EditorMenuID::ExportToNeovim:
+					if (!ExportNeovimProject()) jenova::Error("Jenova Neovim Exporter", "Failed to Export Jenova Solution to Neovim.");
+					break;
 				case jenova::EditorMenuID::ExportJenovaModule:
 					OpenModuleExporterWindow();
 					break;
@@ -1184,6 +1187,9 @@ namespace jenova
 					break;
 				case jenova::EditorMenuID::ReloadScriptDocumentation:
 					if (jenova::UpdateScriptsDocumentation()) jenova::Output("C++ Scripts Documentation Rebuilt Successfully.");
+					break;
+				case jenova::EditorMenuID::ReloadScriptTemplates:
+					if (jenova::UpdateScriptTemplates()) jenova::Output("C++ Script Template Database Rebuilt Successfully.");
 					break;
 				case jenova::EditorMenuID::OpenAddonExplorer:
 					jenova::Error("Jenova Main Menu", "Feature Not Implemented Yet");
@@ -1235,6 +1241,12 @@ namespace jenova
 					{
 						// Todo : Store A Global Value And Compare, If changed Emit Once!
 						jenova::Warning("Jenova Settings", "Compiler Model has Changed. While not Absolutely Required, It's Recommended To Restart The Editor For Stablity.");
+					}
+
+					// Reload Script Templates If Interpreter Backend Changed
+					if (changedEditorSetting == InterpreterBackendConfigPath)
+					{
+						jenova::UpdateScriptTemplates();
 					}
 
 					// Update Terminal If Options Changed
@@ -3085,6 +3097,24 @@ namespace jenova
 				// Open Project in VSCode
 				std::string vscodeExecutable = "code";
 				std::string command = vscodeExecutable + " " + projectPath;
+				if (std::system(command.c_str()) != 0) return false;
+				return true;
+			}
+
+			// Neovim Integration
+			bool ExportNeovimProject()
+			{
+				jenova::Alert("Exporting to Neovim..");
+				return true;
+			}
+			bool OpenProjectInNeovim()
+			{
+				// Get Project Path
+				std::string projectPath = AS_STD_STRING(jenova::GetJenovaProjectDirectory());
+
+				// Open Project in Neovim
+				std::string neovimExecutable = "nvim";
+				std::string command = neovimExecutable + " " + projectPath;
 				if (std::system(command.c_str()) != 0) return false;
 				return true;
 			}
@@ -5280,7 +5310,7 @@ namespace jenova
 					// Split Error Lines
 					std::istringstream errorStream(buffer);
 					std::string errorline;
-					while (std::getline(errorStream, errorline)) jenova::plugin::JenovaEditorPlugin::get_singleton()->call_deferred("VerboseLog", " [color=#f70f4d]  " + String(errorline.c_str()) + "[/color]");
+					while (std::getline(errorStream, errorline)) jenova::plugin::JenovaEditorPlugin::get_singleton()->call_deferred("VerboseLog", " [color=#f70f4d]  " + AS_GD_STRING(errorline) + "[/color]");
 					SwitchToJenovaTerminalTab();
 					return;
 				}
@@ -5316,7 +5346,7 @@ namespace jenova
 					// Split Error Lines
 					std::istringstream warningStream(buffer);
 					std::string warningline;
-					while (std::getline(warningStream, warningline)) jenova::plugin::JenovaEditorPlugin::get_singleton()->call_deferred("VerboseLog", " [color=#f7b90f]  " + String(warningline.c_str()) + "[/color]");
+					while (std::getline(warningStream, warningline)) jenova::plugin::JenovaEditorPlugin::get_singleton()->call_deferred("VerboseLog", " [color=#f7b90f]  " + AS_GD_STRING(warningline) + "[/color]");
 					SwitchToJenovaTerminalTab();
 					return;
 				}
@@ -5685,7 +5715,7 @@ namespace jenova
 	}
 	void CopyStdStringToClipboard(const std::string& str)
 	{
-		return CopyStringToClipboard(String(str.c_str()));
+		return CopyStringToClipboard(AS_GD_STRING(str));
 	}
 	std::string GetStdStringFromClipboard()
 	{
@@ -6205,10 +6235,10 @@ namespace jenova
 	{
 		// Create Module
 		jenova::ScriptModule builtinModule;
-		builtinModule.scriptFilename = String(sourceName.c_str());
+		builtinModule.scriptFilename = AS_GD_STRING(sourceName);
 		builtinModule.scriptUID = jenova::GenerateStandardUIDFromPath(builtinModule.scriptFilename);
 		builtinModule.scriptType = jenova::ScriptModuleType::InternalScript;
-		builtinModule.scriptSource = String(sourceCode.c_str());
+		builtinModule.scriptSource = AS_GD_STRING(sourceCode);
 		builtinModule.scriptHash = builtinModule.scriptSource.md5_text();
 		builtinModule.scriptCacheFile = jenova::GetJenovaCacheDirectory() + builtinModule.scriptFilename + "_" + builtinModule.scriptUID + ".cpp";
 		builtinModule.scriptObjectFile = jenova::GetJenovaCacheDirectory() + builtinModule.scriptFilename + "_" + builtinModule.scriptUID + ".obj";
@@ -6263,7 +6293,7 @@ namespace jenova
 			serializer["BuildTimestamp"] = time(NULL);
 
 			// Write Cache File On Disk
-			Ref<FileAccess> handle = FileAccess::open(String(cacheFile.c_str()), FileAccess::ModeFlags::WRITE);
+			Ref<FileAccess> handle = FileAccess::open(AS_GD_STRING(cacheFile), FileAccess::ModeFlags::WRITE);
 			if (handle.is_valid())
 			{
 				handle->store_string(String(serializer.dump(2).c_str()));
@@ -6670,7 +6700,7 @@ namespace jenova
 	}
 	std::string GenerateFilterUniqueIdentifier(std::string& filterName, bool addBrackets)
 	{
-		std::string md5Hash = AS_STD_STRING(String(filterName.c_str()).md5_text());
+		std::string md5Hash = AS_STD_STRING(AS_GD_STRING(filterName).md5_text());
 		std::string formattedHash = md5Hash.substr(0, 8) + "-" + md5Hash.substr(8, 4) + "-" + md5Hash.substr(12, 4) + "-" + md5Hash.substr(16, 4) + "-" + md5Hash.substr(20);
 		if (addBrackets) formattedHash = "{" + formattedHash + "}";
 		return formattedHash;
@@ -7944,7 +7974,7 @@ namespace jenova
 		std::string sourceStdStr = AS_STD_STRING(scriptSource);
 		jenova::SerializedData propertiesMetadata = ProcessAndExtractPropertiesFromScript(sourceStdStr, AS_STD_STRING(scriptUID));
 		if (scriptSource.parse_utf8(scriptSource.utf8().get_data(), scriptSource.length()) != OK) scriptSource = String::utf8(sourceStdStr.c_str());
-		else scriptSource = String(sourceStdStr.c_str());
+		else scriptSource = AS_GD_STRING(sourceStdStr);
 		return propertiesMetadata;
 	}
 	Variant::Type GetVariantTypeFromStdString(const std::string& typeName)
@@ -8015,13 +8045,13 @@ namespace jenova
 
 			// Create Property Container
 			jenova::ScriptPropertyContainer propertyContainer;
-			propertyContainer.scriptUID = String(scriptUID.c_str());
+			propertyContainer.scriptUID = AS_GD_STRING(scriptUID);
 
 			// Create Script Properties
 			for (const auto& scriptProperty : propertyMetadataParser)
 			{
 				jenova::ScriptProperty scriptProp;
-				scriptProp.ownerScriptUID = String(scriptUID.c_str());
+				scriptProp.ownerScriptUID = AS_GD_STRING(scriptUID);
 				scriptProp.propertyName = String(scriptProperty["PropertyName"].get<std::string>().c_str());
 				scriptProp.propertyInfo.type = jenova::GetVariantTypeFromStdString(scriptProperty["PropertyType"].get<std::string>());
 				scriptProp.defaultValue = UtilityFunctions::str_to_var(String(scriptProperty["PropertyDefault"].get<std::string>().c_str()));
@@ -8961,6 +8991,16 @@ namespace jenova
 			return "Unknown";
 		#endif
 	}
+	bool InstallBuiltInScriptTemplates()
+	{
+		if (JenovaTemplateManager::get_singleton() == nullptr) return false;
+		return JenovaTemplateManager::get_singleton()->InstallBuiltInScriptTemplates();
+	}
+	bool UpdateScriptTemplates()
+	{
+		if (JenovaTemplateManager::get_singleton() == nullptr) return false;
+		return JenovaTemplateManager::get_singleton()->UpdateScriptTemplates();
+	}
 	bool UpdateScriptsDocumentation()
 	{
 		// Collect Scripts
@@ -9120,7 +9160,7 @@ namespace jenova
 	}
 	std::string DownloadContentFromURLToStdString(const std::string& hostName, const std::string& fileURL, int targetPort)
 	{
-		return AS_STD_STRING(DownloadContentFromURLToString(String(hostName.c_str()), String(fileURL.c_str()), targetPort));
+		return AS_STD_STRING(DownloadContentFromURLToString(AS_GD_STRING(hostName), AS_GD_STRING(fileURL), targetPort));
 	}
 	jenova::json_t DownloadAndParseSerializedContentFromURL(const std::string& hostName, const std::string& fileURL, int targetPort)
 	{
@@ -9195,6 +9235,10 @@ namespace jenova
 	{
 		if (!jenova::plugin::JenovaEditorPlugin::get_singleton()) return;
 		jenova::plugin::JenovaEditorPlugin::get_singleton()->call_deferred("SwitchToTerminal");
+	}
+	bool IsEngineBlazium()
+	{
+		return true;
 	}
 	#pragma endregion
 	

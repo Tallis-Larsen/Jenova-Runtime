@@ -333,7 +333,7 @@ Dictionary CPPScriptLanguage::_get_global_class_name(const String& p_path) const
 		if (cppScript->has_source_code())
 		{
 			std::string className = jenova::ParseClassNameFromScriptSource(AS_STD_STRING(cppScript->get_source_code()));
-			if (!className.empty()) classInfo["name"] = String(className.c_str());
+			if (!className.empty()) classInfo["name"] = AS_GD_STRING(className);
 			else classInfo["name"] = "NotFound";
 		}
 

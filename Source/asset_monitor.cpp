@@ -95,14 +95,14 @@ bool JenovaAssetMonitor::AddDirectory(const String& directoryPath)
 			if (lastRead.find(path) == lastRead.end() || std::chrono::duration_cast<std::chrono::milliseconds>(lastWriteTime - lastRead[path]).count() > 100)
 			{
 				lastRead[path] = lastWriteTime;
-				for (const auto& callback : monitorCallbacks) callback(String(path.c_str()), jenova::AssetMonitor::CallbackEvent(change_type));
-				JenovaAssetMonitor::get_singleton()->emit_signal("callback", String(path.c_str()), GetCallbackEventStringName(jenova::AssetMonitor::CallbackEvent(change_type)));
+				for (const auto& callback : monitorCallbacks) callback(AS_GD_STRING(path), jenova::AssetMonitor::CallbackEvent(change_type));
+				JenovaAssetMonitor::get_singleton()->emit_signal("callback", AS_GD_STRING(path), GetCallbackEventStringName(jenova::AssetMonitor::CallbackEvent(change_type)));
 			}
 		}
 		else
 		{
-			for (const auto& callback : monitorCallbacks) callback(String(path.c_str()), jenova::AssetMonitor::CallbackEvent(change_type));
-			JenovaAssetMonitor::get_singleton()->emit_signal("callback", String(path.c_str()), GetCallbackEventStringName(jenova::AssetMonitor::CallbackEvent(change_type)));
+			for (const auto& callback : monitorCallbacks) callback(AS_GD_STRING(path), jenova::AssetMonitor::CallbackEvent(change_type));
+			JenovaAssetMonitor::get_singleton()->emit_signal("callback", AS_GD_STRING(path), GetCallbackEventStringName(jenova::AssetMonitor::CallbackEvent(change_type)));
 		}
 	});
 	#else
@@ -122,8 +122,8 @@ bool JenovaAssetMonitor::AddDirectory(const String& directoryPath)
 		solvedPath = CleanPath(solvedPath);
 
 		// Rise Callback
-		for (const auto& callback : monitorCallbacks) callback(String(solvedPath.c_str()), jenova::AssetMonitor::CallbackEvent(change_type));
-		JenovaAssetMonitor::get_singleton()->emit_signal("callback", String(solvedPath.c_str()), GetCallbackEventStringName(jenova::AssetMonitor::CallbackEvent(change_type)));
+		for (const auto& callback : monitorCallbacks) callback(AS_GD_STRING(solvedPath), jenova::AssetMonitor::CallbackEvent(change_type));
+		JenovaAssetMonitor::get_singleton()->emit_signal("callback", AS_GD_STRING(solvedPath), GetCallbackEventStringName(jenova::AssetMonitor::CallbackEvent(change_type)));
 	});
 	#endif
 

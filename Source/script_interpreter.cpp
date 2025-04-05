@@ -349,7 +349,7 @@ jenova::ScriptFunctionContainer JenovaInterpreter::GetFunctionContainer(const st
 
     // Create Function Container
     jenova::ScriptFunctionContainer functionContainer;
-    functionContainer.scriptUID = String(scriptUID.c_str());
+    functionContainer.scriptUID = AS_GD_STRING(scriptUID);
 
     // Collect Script Functions
     jenova::FunctionList jenovaMethods = GetFunctionsList(scriptUID);
@@ -1817,12 +1817,12 @@ bool JenovaInterpreter::DeployFromDatabase(const std::string& moduleDatabaseName
     jenova::MemoryBuffer databaseRawData;
 
     // Create Database File Path
-    String defaultModuleDatabasePath = String(jenova::GlobalSettings::DefaultJenovaBootPath) + String(moduleDatabaseName.c_str());
+    String defaultModuleDatabasePath = String(jenova::GlobalSettings::DefaultJenovaBootPath) + AS_GD_STRING(moduleDatabaseName);
 
     // Update Database File Path if In Editor/Debugging
     if (QUERY_ENGINE_MODE(Editor) || QUERY_ENGINE_MODE(Debug))
     {
-        defaultModuleDatabasePath = String(jenova::GetJenovaCacheDirectory()) + String(moduleDatabaseName.c_str());
+        defaultModuleDatabasePath = String(jenova::GetJenovaCacheDirectory()) + AS_GD_STRING(moduleDatabaseName);
     }
 
     // Open & Validate File
@@ -1922,12 +1922,12 @@ bool JenovaInterpreter::IsDatabaseAvailable(const std::string& moduleDatabaseNam
     jenova::VerboseByID(__LINE__, "Validating Jenova Compiled Module Database...");
 
     // Create Database File Path
-    String defaultModuleDatabasePath = String(jenova::GlobalSettings::DefaultJenovaBootPath) + String(moduleDatabaseName.c_str());
+    String defaultModuleDatabasePath = String(jenova::GlobalSettings::DefaultJenovaBootPath) + AS_GD_STRING(moduleDatabaseName);
 
     // Update Database File Path if In Editor/Debugging
     if (QUERY_ENGINE_MODE(Editor) || QUERY_ENGINE_MODE(Debug))
     {
-        defaultModuleDatabasePath = String(jenova::GetJenovaCacheDirectory()) + String(moduleDatabaseName.c_str());
+        defaultModuleDatabasePath = String(jenova::GetJenovaCacheDirectory()) + AS_GD_STRING(moduleDatabaseName);
     }
 
     // Check If Database File Exists

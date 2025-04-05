@@ -535,7 +535,7 @@ namespace jenova
                         result.compileError = "C668 : One or more compilation tasks failed.\n";
                         for (const auto& errorMsg : errorMessages)
                         {
-                            result.compileError += String(errorMsg.c_str()) + "\n";
+                            result.compileError += AS_GD_STRING(errorMsg) + "\n";
                         }
                         return result;
                     }
@@ -677,8 +677,8 @@ namespace jenova
             // Set the compiler result
             result.compileResult = (exitCode == 0);
             result.hasError = (exitCode != 0);
-            result.compileError = String(resultOutput.c_str());
-            result.compileVerbose = String(resultOutput.c_str());
+            result.compileError = AS_GD_STRING(resultOutput);
+            result.compileVerbose = AS_GD_STRING(resultOutput);
 
             // Yield Engine
             OS::get_singleton()->delay_msec(1);
@@ -871,8 +871,8 @@ namespace jenova
             // Set the build result
             result.buildResult = (exitCode == 0);
             result.hasError = (exitCode != 0);
-            result.buildError = String(resultOutput.c_str());
-            result.buildVerbose = String(resultOutput.c_str());
+            result.buildError = AS_GD_STRING(resultOutput);
+            result.buildVerbose = AS_GD_STRING(resultOutput);
 
             // Return if There's error
             if (!result.buildResult) return result;
@@ -1485,7 +1485,7 @@ namespace jenova
                 result.compileError = "C668 : One or more compilation tasks failed.\n";
                 for (const auto& errorMsg : errorMessages)
                 {
-                    result.compileError += String(errorMsg.c_str()) + "\n";
+                    result.compileError += AS_GD_STRING(errorMsg) + "\n";
                 }
                 return result;
             }
@@ -1695,8 +1695,8 @@ namespace jenova
             // Set the build result
             result.buildResult = (exitCode == 0);
             result.hasError = (exitCode != 0);
-            result.buildError = String(resultOutput.c_str());
-            result.buildVerbose = String(resultOutput.c_str());
+            result.buildError = AS_GD_STRING(resultOutput);
+            result.buildVerbose = AS_GD_STRING(resultOutput);
 
             // Return if There's error
             if (!result.buildResult) return result;
@@ -2487,7 +2487,7 @@ namespace jenova
                 if (!result.buildResult)
                 {
                     result.hasError = true;
-                    result.buildError = String(resultOutput.c_str());
+                    result.buildError = AS_GD_STRING(resultOutput);
                     return result;
                 }
             }

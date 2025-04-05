@@ -38,4 +38,9 @@ public:
 	String GetGlobalScriptTemplateSource(const String& templateName);
 	TypedArray<Dictionary> GetClassScriptTemplates(const String& className);
 	String GetClassScriptTemplateSource(const String& templateName, const String& className);
+	void ClearScriptTemplates();
+
+public:
+	bool InstallBuiltInScriptTemplates();
+	bool UpdateScriptTemplates();
 };

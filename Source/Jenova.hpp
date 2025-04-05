@@ -20,11 +20,11 @@
 #define APP_COMPANYNAME					"MemarDesign™ LLC."
 #define APP_DESCRIPTION					"Real-Time C++ Scripting System for Godot Game Engine, Developed By Hamid.Memar."
 #define APP_COPYRIGHT					"Copyright MemarDesign™ LLC. (©) 2024-2025, All Rights Reserved."
-#define APP_VERSION						"0.3.7.3"
+#define APP_VERSION						"0.3.7.4"
 #define APP_VERSION_MIDDLEFIX			" "
 #define APP_VERSION_POSTFIX				"Beta"
 #define APP_VERSION_SINGLECHAR			"b"
-#define APP_VERSION_DATA				0, 3, 7, 3
+#define APP_VERSION_DATA				0, 3, 7, 4
 #define APP_VERSION_BUILD				"0"
 #define APP_VERSION_NAME				"Silverlight"
 
@@ -285,6 +285,7 @@ using namespace godot;
 #define AS_STD_STRING(gstr)					(*jenova::ConvertToStdString(gstr).str)
 #define AS_C_STRING(gstr)					((*jenova::ConvertToStdString(gstr).str).c_str())
 #define AS_STD_WSTRING(gstr)				(*jenova::ConvertToWideStdString(gstr).wstr)
+#define AS_GD_STRING(str)					godot::String(str.c_str())
 #define EDITOR_MENU_ID(id)					int32_t(jenova::EditorMenuID::id)
 #define BUFFER_PTR_SIZE_PARAM(buffer)		buffer, sizeof(buffer)
 #define JENOVA_RESOURCE(key)				jenova::resources::key
@@ -467,12 +468,14 @@ namespace jenova
 		ConfigureBuild,
 		ExportToVisualStudio,
 		ExportToVisualStudioCode,
+		ExportToNeovim,
 		ExportJenovaModule,
 		DeveloperMode,
 		ClearCacheDatabase,
 		GenerateEncryptionKey,
 		BackupCurrentEncryptionKey,
 		ReloadScriptDocumentation,
+		ReloadScriptTemplates,
 		OpenAddonExplorer,
 		OpenScriptManager,
 		OpenPackageManager,
@@ -793,6 +796,7 @@ namespace jenova
 		constexpr char* JenovaPackageDatabaseURL				= "https://raw.githubusercontent.com";
 		constexpr char* JenovaReleaseMetadataURL				= "https://raw.githubusercontent.com";
 		constexpr char* JenovaPackageRepositoryPath				= "Jenova/Packages/";
+		constexpr char* JenovaScriptTemplatesPath				= "Jenova/Templates/";
 
 		constexpr int JenovaTerminalLogFontSize					= 12;
 
@@ -983,6 +987,8 @@ namespace jenova
 	bool ReleaseTemporaryModuleCache();
 	std::string GetVisualStudioInstancesMetadata(std::string arguments);
 	std::string GetRuntimeCompilerName();
+	bool InstallBuiltInScriptTemplates();
+	bool UpdateScriptTemplates();
 	bool UpdateScriptsDocumentation();
 	bool LoadToolPackages();
 	bool UnloadToolPackages();
@@ -996,6 +1002,7 @@ namespace jenova
 	void CheckForRuntimeUpdate();
 	std::string FormatTimestampToStdString(time_t timestamp);
 	void SwitchToJenovaTerminalTab();
+	bool IsEngineBlazium();
 	#pragma endregion
 
 	// Crash Handlers

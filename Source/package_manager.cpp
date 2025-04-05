@@ -158,7 +158,7 @@ bool JenovaPackageManager::OpenPackageManager(const String& packageDatabaseURL)
 	auto packageAddIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_PACKAGE_ADD_ICON));
 	auto recycleIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_RECYCLE_ICON));
 	auto editTextIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_EDIT_TEXT_ICON));
-	auto directoryOpenIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_DIRECTORY_OPEN_ICO));
+	auto directoryOpenIcon = CREATE_SVG_MENU_ICON(JENOVA_RESOURCE(SVG_DIRECTORY_OPEN_ICON));
 
 	// Add Toolbar Items
 	Button* open_repository_tool = CreateToolbarItem("OpenRepositoryTool", githubIcon, "Open Packages Database GitHub Repository", toolbar);
@@ -566,7 +566,7 @@ void JenovaPackageManager::ReloadEntireDatabase()
 		return;
 	}
 	this->FormatStatus("#ababab", "Fetching Online Packages...");
-	if (!FetchOnlinePackages(String(currentDatabaseURL.c_str())))
+	if (!FetchOnlinePackages(AS_GD_STRING(currentDatabaseURL)))
 	{
 		FormatStatus("#ff1717", "Failed to Reload Database.");
 		return;
@@ -1333,7 +1333,7 @@ bool JenovaPackageManager::InstallCustomPackage(const jenova::CustomPackageInsta
 				}
 
 				// Extract Package Content to Destination
-				if (!eventData.pkgManagerInstance->ExtractPackage(packageFilePath, String(pkgDestination.c_str())))
+				if (!eventData.pkgManagerInstance->ExtractPackage(packageFilePath, AS_GD_STRING(pkgDestination)))
 				{
 					jenova::Error("Custom Package Installer", "Failed to Extract Custom Package File to Destination Directory.");
 					ReleaseEverything();
@@ -1342,7 +1342,7 @@ bool JenovaPackageManager::InstallCustomPackage(const jenova::CustomPackageInsta
 
 				// Add Installed Package to Database
 				jenova::JenovaPackage newPackage;
-				newPackage.pkgDestination = ProjectSettings::get_singleton()->localize_path(String(pkgDestination.c_str()));
+				newPackage.pkgDestination = ProjectSettings::get_singleton()->localize_path(AS_GD_STRING(pkgDestination));
 				if (newPackage.pkgDestination.ends_with("/")) newPackage.pkgDestination = newPackage.pkgDestination.erase(newPackage.pkgDestination.length() - 1);
 				newPackage.pkgHash = jenova::GenerateMD5HashFromFile(packageFilePath);
 				newPackage.pkgName = pkgName;
