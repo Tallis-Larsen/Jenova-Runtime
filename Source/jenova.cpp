@@ -3104,7 +3104,70 @@ namespace jenova
 			// Neovim Integration
 			bool ExportNeovimProject()
 			{
-				jenova::Alert("Exporting to Neovim..");
+				// Verbose
+				jenova::Output("Initializing Neovim Exporter...");
+
+				// Update Storage Configurations
+				if (!UpdateStorageConfigurations())
+				{
+					jenova::Error("Jenova Settings", "Unable to Update Storage Configurations!");
+					return false;
+				}
+
+				// Get Project Path
+				std::string projectPath = AS_STD_STRING(jenova::GetJenovaProjectDirectory());
+
+				// Create Compiler [For Obtaining Settings Only]
+				if (!CreateCompiler()) return false;
+
+				// Solve Compiler Settings
+				if (!bool(jenovaCompiler->ExecuteCommand("Solve-Compiler-Settings", Dictionary()))) return false;
+
+				// Solve GodotKit Path
+				String selectedGodotKitPath = jenova::GetInstalledGodotKitPathFromPackages(jenovaCompiler->GetCompilerOption("cpp_godotsdk_path"));
+				if (selectedGodotKitPath == "Missing-GodotKit-1.0.0")
+				{
+					jenova::Error("Neovim Exporter", "No GodotSDK Detected On Build System, Install At Least One From Package Manager!");
+					return false;
+				}
+				std::string solvedGodotKitPath = "./" + AS_STD_STRING(selectedGodotKitPath.replace("res://", ""));
+
+				// Extra Includes
+				std::string extraIncludeDirectories = AS_STD_STRING(String(jenovaCompiler->GetCompilerOption("cpp_extra_include_directories")));
+
+				// Dispose Compiler
+				DisposeCompiler();
+
+				// Prepare Include Flags
+				std::vector<std::string> includePaths = 
+				{
+					"-I./",
+					"-I./Jenova/JenovaSDK",
+					"-I" + solvedGodotKitPath
+				};
+
+				// Append Extra Includes
+				std::stringstream ss(extraIncludeDirectories);
+				std::string path;
+				while (std::getline(ss, path, ';'))
+				{
+					if (!path.empty()) includePaths.push_back("-I" + path);
+				}
+
+				// Join Includes into a Single String
+				std::string compileFlagsContent;
+				for (const auto& line : includePaths) compileFlagsContent += line + "\n";
+
+				// Write to Compile Flags File
+				std::string compileFlagsFile = projectPath + "compile_flags.txt";
+				if (!jenova::WriteStdStringToFile(compileFlagsFile, compileFlagsContent))
+				{
+					jenova::Error("Neovim Exporter", "Unable to write compile_flags.txt!");
+					return false;
+				}
+
+				// All Good
+				jenova::OutputColored("#00ff88", "Neovim Project Has Been Successfully Exported.");
 				return true;
 			}
 			bool OpenProjectInNeovim()
@@ -9238,6 +9301,7 @@ namespace jenova
 	}
 	bool IsEngineBlazium()
 	{
+		if (ClassDB::class_exists("BlaziumClient")) return true;
 		return false;
 	}
 	#pragma endregion
