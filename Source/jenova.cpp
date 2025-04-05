@@ -9238,7 +9238,7 @@ namespace jenova
 	}
 	bool IsEngineBlazium()
 	{
-		return true;
+		return false;
 	}
 	#pragma endregion
 	
