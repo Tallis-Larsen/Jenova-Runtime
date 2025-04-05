@@ -3482,7 +3482,7 @@ namespace jenova
 				// Create Window
 				Window* jenva_about_window = memnew(Window);
 				jenva_about_window->set_title("About Projekt Jenova");
-				jenva_about_window->set_size(Vector2i(SCALED(750), SCALED(600)));
+				jenva_about_window->set_size(Vector2i(SCALED(750), SCALED(650)));
 				jenva_about_window->set_flag(Window::Flags::FLAG_RESIZE_DISABLED, true);
 				jenva_about_window->set_flag(Window::Flags::FLAG_POPUP, true);
 
@@ -3564,7 +3564,7 @@ namespace jenova
 					"It allows the use of modern C++20 standards within the Godot Engine, similar to GDScript.\n\n"
 					"With Projekt J.E.N.O.V.A, You can create anything!\nFrom Desktop Software to AAA Quality Games. \n"
 					"It's a full toolset with all the features C++ compilers provide.\n\n"
-					"For More Information Visit Official Website:\n"
+					"For More Information Visit Official Website.\n"
 				);
 				description->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
 				description->add_theme_font_size_override("font_size", SCALED(16));
@@ -3580,7 +3580,7 @@ namespace jenova
 				author->set_anchor(Side::SIDE_TOP, 1.0);
 				author->set_anchor(Side::SIDE_RIGHT, 0.5);
 				author->set_anchor(Side::SIDE_BOTTOM, 1.0);
-				author->set_offset(Side::SIDE_LEFT, SCALED(-48.0));
+				author->set_offset(Side::SIDE_LEFT, SCALED(-51.0));
 				author->set_offset(Side::SIDE_TOP, SCALED(-75.0));
 				author->set_offset(Side::SIDE_RIGHT, SCALED(349.0));
 				author->set_offset(Side::SIDE_BOTTOM, SCALED(-42.0));
@@ -3599,7 +3599,7 @@ namespace jenova
 				company->set_anchor(Side::SIDE_TOP, 1.0);
 				company->set_anchor(Side::SIDE_RIGHT, 0.5);
 				company->set_anchor(Side::SIDE_BOTTOM, 1.0);
-				company->set_offset(Side::SIDE_LEFT, SCALED(-48.0));
+				company->set_offset(Side::SIDE_LEFT, SCALED(-51.0));
 				company->set_offset(Side::SIDE_TOP, SCALED(-50.0));
 				company->set_offset(Side::SIDE_RIGHT, SCALED(349.0));
 				company->set_offset(Side::SIDE_BOTTOM, SCALED(-17.0));
@@ -3612,15 +3612,15 @@ namespace jenova
 				// Add Button
 				Button* open_web_button = memnew(Button);
 				open_web_button->set_name("OpenWebButton");
-				open_web_button->set_anchors_preset(Control::PRESET_CENTER);
+				open_web_button->set_anchors_preset(Control::PRESET_BOTTOM_RIGHT);
 				open_web_button->set_anchor(Side::SIDE_LEFT, 0.5);
 				open_web_button->set_anchor(Side::SIDE_TOP, 0.5);
 				open_web_button->set_anchor(Side::SIDE_RIGHT, 0.5);
 				open_web_button->set_anchor(Side::SIDE_BOTTOM, 0.5);
 				open_web_button->set_offset(Side::SIDE_LEFT, SCALED(-49.0));
-				open_web_button->set_offset(Side::SIDE_TOP, SCALED(146.0));
+				open_web_button->set_offset(Side::SIDE_TOP, SCALED(170.0));
 				open_web_button->set_offset(Side::SIDE_RIGHT, SCALED(351.0));
-				open_web_button->set_offset(Side::SIDE_BOTTOM, SCALED(201.0));
+				open_web_button->set_offset(Side::SIDE_BOTTOM, SCALED(230.0));
 				open_web_button->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 				open_web_button->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 				open_web_button->add_theme_color_override("font_color", Color(0.427828, 0.675155, 0.933394, 1));
