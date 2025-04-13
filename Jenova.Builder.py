@@ -475,16 +475,33 @@ def build_linux(compilerBinary, linkerBinary, buildMode, buildSystem):
     rgb_print("#fff06e", f"[ > ] Building Jenova Runtime for Linux using {buildSystem} Toolchain...")
 
     # Dependencies
-    libs = [
-        "Libs/libzlib-static-x86_64.a",
-        "Libs/libtcc-static-x86_64.a",
-        "Libs/libgodotcpp-static-x86_64.a",
-        "Libs/libcurl-static-x86_64.a",
-        "Libs/libasmjit-static-x86_64.a",
-        "Libs/libarchive-static-x86_64.a",
-        "Libs/liblzma-static-x86_64.a",
-        "Libs/libxml2-static-x86_64.a"
-    ]
+    # Check if the operating system is Fedora. This is a fix to a linking issue shown to occur on Fedora linux
+    if platform.system() == "Linux" and "fedora" in platform.freedesktop_os_release().get("ID", "").lower():
+        libs = [
+            "Libs/libzlib-static-x86_64.a",
+            "Libs/libtcc-static-x86_64.a",
+            "Libs/libgodotcpp-static-x86_64.a",
+            "-lcurl",
+            "-llz4",
+            "-lzstd",
+            "-lssl",
+            "-lcrypto",
+            "Libs/libasmjit-static-x86_64.a",
+            "Libs/libarchive-static-x86_64.a",
+            "Libs/liblzma-static-x86_64.a",
+            "Libs/libxml2-static-x86_64.a"
+        ]
+    else:
+        libs = [
+            "Libs/libzlib-static-x86_64.a",
+            "Libs/libtcc-static-x86_64.a",
+            "Libs/libgodotcpp-static-x86_64.a",
+            "Libs/libcurl-static-x86_64.a",
+            "Libs/libasmjit-static-x86_64.a",
+            "Libs/libarchive-static-x86_64.a",
+            "Libs/liblzma-static-x86_64.a",
+            "Libs/libxml2-static-x86_64.a"
+        ]
 
     # Configuration
     compiler = compilerBinary
